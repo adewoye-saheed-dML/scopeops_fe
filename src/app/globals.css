@@ -1,26 +1,41 @@
 @import "tailwindcss";
+@config "../../tailwind.config.ts";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f3f6ff;
+  --foreground: #0f172a;
+  --surface: #ffffff;
+  --surface-muted: #e8edf8;
+  --border: #d6ddeb;
+  --muted-foreground: #64748b;
+  --grad-primary: 99 102 241;
+  --grad-accent: 16 185 129;
+}
+
+.dark {
+  --background: #060b17;
+  --foreground: #e6edf7;
+  --surface: #0e1629;
+  --surface-muted: #17233c;
+  --border: #263756;
+  --muted-foreground: #9ab0d1;
+  --grad-primary: 79 124 255;
+  --grad-accent: 16 185 129;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-sans: var(--font-plus-jakarta-sans);
 }
 
 body {
+  min-height: 100vh;
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  transition: background-color 180ms ease, color 180ms ease;
+  font-family: var(--font-plus-jakarta-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  background-image:
+    radial-gradient(circle at 15% 20%, rgb(var(--grad-primary) / 0.15), transparent 40%),
+    radial-gradient(circle at 80% 0%, rgb(var(--grad-accent) / 0.1), transparent 35%);
 }
