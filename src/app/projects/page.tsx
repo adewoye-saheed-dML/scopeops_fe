@@ -7,6 +7,7 @@ import api from "@/lib/api";
 import CreateScopeForm from "@/components/scopes/CreateScopeForm";
 import CreateSpendForm from "@/components/scopes/CreateSpendForm";
 import EditSupplierForm from "@/components/scopes/EditSupplierForm";
+import CsvUploader from "@/components/scopes/CsvUploader";
 import { DataTable, type DataTableColumn } from "@/components/data-table";
 import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, SlideOver } from "@/components/ui";
 import { useToast } from "@/hooks/useToast";
@@ -43,6 +44,7 @@ export default function ProjectsPage() {
   const [isSupplierPanelOpen, setIsSupplierPanelOpen] = useState(false);
   const [isSpendPanelOpen, setIsSpendPanelOpen] = useState(false);
   const [isEditPanelOpen, setIsEditPanelOpen] = useState(false);
+  const [isCsvPanelOpen, setIsCsvPanelOpen] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState<SupplierRead | null>(null);
 
   const fetchSuppliers = useCallback(async () => {
@@ -166,6 +168,11 @@ export default function ProjectsPage() {
     fetchSuppliers();
   }
 
+  function handleCsvImported() {
+    setIsCsvPanelOpen(false);
+    fetchSuppliers();
+  }
+
   return (
     <section className="space-y-6">
       <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
@@ -183,6 +190,9 @@ export default function ProjectsPage() {
           <Button variant="outline" onClick={() => setIsSpendPanelOpen(true)} className="gap-2">
             <Plus className="h-4 w-4" />
             Add Spend
+          </Button>
+          <Button variant="outline" onClick={() => setIsCsvPanelOpen(true)}>
+            Import CSV
           </Button>
         </div>
       </div>
@@ -247,6 +257,18 @@ export default function ProjectsPage() {
             setIsEditPanelOpen(false);
             setSelectedSupplier(null);
           }}
+        />
+      </SlideOver>
+
+      <SlideOver
+        open={isCsvPanelOpen}
+        title="Import ERP CSV"
+        description="Upload bulk ERP spend data for ingestion."
+        onClose={() => setIsCsvPanelOpen(false)}
+      >
+        <CsvUploader
+          onUploaded={handleCsvImported}
+          onCancel={() => setIsCsvPanelOpen(false)}
         />
       </SlideOver>
     </section>
