@@ -12,19 +12,26 @@ function applyTheme(theme: ThemePreference) {
   root.style.colorScheme = theme;
 }
 
+function getInitialTheme(): ThemePreference {
+  if (typeof window === "undefined") {
+    return "dark";
+  }
+
+  const stored = window.localStorage.getItem(STORAGE_KEY);
+  if (stored === "dark" || stored === "light") {
+    return stored;
+  }
+
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+
 export function useThemePreference() {
-  const [theme, setTheme] = useState<ThemePreference>("dark");
-  const [ready, setReady] = useState(false);
+  const [theme, setTheme] = useState<ThemePreference>(getInitialTheme);
+  const ready = true;
 
   useEffect(() => {
-    const stored = window.localStorage.getItem(STORAGE_KEY) as ThemePreference | null;
-    const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const initialTheme = stored ?? (systemPrefersDark ? "dark" : "light");
-
-    setTheme(initialTheme);
-    applyTheme(initialTheme);
-    setReady(true);
-  }, []);
+    applyTheme(theme);
+  }, [theme]);
 
   const setThemePreference = useCallback((nextTheme: ThemePreference) => {
     setTheme(nextTheme);

@@ -1,229 +1,252 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Plus } from "lucide-react";
-import type { CreateScopeValues } from "@/components/scopes/CreateScopeForm";
+import { isAxiosError } from "axios";
+import api from "@/lib/api";
 import CreateScopeForm from "@/components/scopes/CreateScopeForm";
+import CreateSpendForm from "@/components/scopes/CreateSpendForm";
+import EditSupplierForm from "@/components/scopes/EditSupplierForm";
 import { DataTable, type DataTableColumn } from "@/components/data-table";
 import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, SlideOver } from "@/components/ui";
-import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/useToast";
+import type { SupplierRead } from "@/types/api";
 
-type ScopeRow = {
-  id: string;
-  scopeName: string;
-  owner: string;
-  scopeType: string;
-  priority: "Low" | "Medium" | "High" | "Critical";
-  status: "Draft" | "In Review" | "Approved";
-  startDate: string;
-  dueDate: string;
+type ApiErrorResponse = {
+  detail?: string;
 };
 
-const initialRows: ScopeRow[] = [
-  {
-    id: "scope-001",
-    scopeName: "Supplier Emissions Baseline",
-    owner: "Ava Patel",
-    scopeType: "Operational",
-    priority: "High",
-    status: "In Review",
-    startDate: "2026-02-03",
-    dueDate: "2026-03-12",
-  },
-  {
-    id: "scope-002",
-    scopeName: "Q2 Compliance Readiness",
-    owner: "Marcus Reed",
-    scopeType: "Compliance",
-    priority: "Critical",
-    status: "Draft",
-    startDate: "2026-02-10",
-    dueDate: "2026-03-01",
-  },
-  {
-    id: "scope-003",
-    scopeName: "Freight Optimization Pilot",
-    owner: "Nina Kim",
-    scopeType: "Reduction Program",
-    priority: "Medium",
-    status: "Approved",
-    startDate: "2026-01-19",
-    dueDate: "2026-04-20",
-  },
-  {
-    id: "scope-004",
-    scopeName: "Tier-1 Supplier Enablement",
-    owner: "Leo Santos",
-    scopeType: "Supplier Engagement",
-    priority: "High",
-    status: "In Review",
-    startDate: "2026-02-14",
-    dueDate: "2026-03-28",
-  },
-  {
-    id: "scope-005",
-    scopeName: "Energy Data Consolidation",
-    owner: "Priya Shah",
-    scopeType: "Operational",
-    priority: "Low",
-    status: "Draft",
-    startDate: "2026-01-26",
-    dueDate: "2026-03-18",
-  },
-  {
-    id: "scope-006",
-    scopeName: "Material Impact Verification",
-    owner: "Omar Khan",
-    scopeType: "Compliance",
-    priority: "Medium",
-    status: "Approved",
-    startDate: "2026-02-01",
-    dueDate: "2026-03-08",
-  },
-  {
-    id: "scope-007",
-    scopeName: "Packaging Reduction Initiative",
-    owner: "Rachel Wong",
-    scopeType: "Reduction Program",
-    priority: "High",
-    status: "In Review",
-    startDate: "2026-02-16",
-    dueDate: "2026-04-01",
-  },
-];
+function getErrorMessage(error: unknown, fallback: string) {
+  if (isAxiosError<ApiErrorResponse>(error)) {
+    return error.response?.data?.detail || fallback;
+  }
 
-function statusBadge(status: ScopeRow["status"]) {
-  return (
-    <span
-      className={cn(
-        "inline-flex rounded-full px-2.5 py-1 text-xs font-semibold",
-        status === "Approved" && "bg-success/20 text-success",
-        status === "In Review" && "bg-warning/20 text-warning",
-        status === "Draft" && "bg-scope-surfaceMuted text-scope-textMuted",
-      )}
-    >
-      {status}
-    </span>
-  );
+  return fallback;
 }
 
-function priorityBadge(priority: ScopeRow["priority"]) {
+function disclosureBadge(hasDisclosure: boolean) {
   return (
     <span
-      className={cn(
-        "inline-flex rounded-full px-2.5 py-1 text-xs font-semibold",
-        priority === "Critical" && "bg-error/20 text-error",
-        priority === "High" && "bg-warning/20 text-warning",
-        priority === "Medium" && "bg-scope-primary/20 text-scope-primary",
-        priority === "Low" && "bg-success/20 text-success",
-      )}
+      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
+        hasDisclosure ? "bg-success/20 text-success" : "bg-warning/20 text-warning"
+      }`}
     >
-      {priority}
+      {hasDisclosure ? "Yes" : "No"}
     </span>
   );
 }
 
 export default function ProjectsPage() {
-  const [rows, setRows] = useState<ScopeRow[]>(initialRows);
-  const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const toast = useToast();
+  const [suppliers, setSuppliers] = useState<SupplierRead[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSupplierPanelOpen, setIsSupplierPanelOpen] = useState(false);
+  const [isSpendPanelOpen, setIsSpendPanelOpen] = useState(false);
+  const [isEditPanelOpen, setIsEditPanelOpen] = useState(false);
+  const [selectedSupplier, setSelectedSupplier] = useState<SupplierRead | null>(null);
 
-  const columns: DataTableColumn<ScopeRow>[] = useMemo(
+  const fetchSuppliers = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const response = await api.get<SupplierRead[]>("/suppliers/");
+      setSuppliers(response.data ?? []);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchSuppliers();
+  }, [fetchSuppliers]);
+
+  const columns: DataTableColumn<SupplierRead>[] = useMemo(
     () => [
       {
-        key: "scopeName",
-        header: "Scope",
+        key: "supplier_name",
+        header: "Supplier",
         sortable: true,
       },
       {
-        key: "owner",
-        header: "Owner",
+        key: "domain",
+        header: "Domain",
         sortable: true,
+        accessor: (row) => row.domain || "N/A",
       },
       {
-        key: "scopeType",
-        header: "Type",
+        key: "region",
+        header: "Region",
         sortable: true,
+        accessor: (row) => row.region || "N/A",
       },
       {
-        key: "priority",
-        header: "Priority",
+        key: "sbti_status",
+        header: "SBTi Status",
         sortable: true,
-        accessor: (row) => priorityBadge(row.priority),
-        sortValue: (row) => row.priority,
+        accessor: (row) => row.sbti_status || "N/A",
       },
       {
-        key: "status",
-        header: "Status",
+        key: "has_disclosure",
+        header: "Has Disclosure",
         sortable: true,
-        accessor: (row) => statusBadge(row.status),
-        sortValue: (row) => row.status,
+        accessor: (row) => disclosureBadge(row.has_disclosure),
+        sortValue: (row) => (row.has_disclosure ? 1 : 0),
       },
       {
-        key: "dueDate",
-        header: "Due Date",
-        sortable: true,
+        key: "actions",
+        header: "Actions",
+        accessor: (row) => (
+          <div className="flex items-center gap-1">
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              onClick={() => {
+                setSelectedSupplier(row);
+                setIsEditPanelOpen(true);
+              }}
+            >
+              Edit
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              onClick={async () => {
+                try {
+                  await api.get(`/suppliers/${row.id}/enterprise-rollup`);
+                  toast.success("Rollup generated", `Enterprise rollup ran for ${row.supplier_name}.`);
+                } catch (error: unknown) {
+                  toast.error("Rollup failed", getErrorMessage(error, "Could not generate rollup."));
+                }
+              }}
+            >
+              Rollup
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              onClick={async () => {
+                const shouldDelete = window.confirm(`Delete supplier "${row.supplier_name}"?`);
+                if (!shouldDelete) {
+                  return;
+                }
+
+                try {
+                  await api.delete(`/suppliers/${row.id}`);
+                  toast.success("Supplier deleted", `${row.supplier_name} has been removed.`);
+                  fetchSuppliers();
+                } catch (error: unknown) {
+                  toast.error("Delete failed", getErrorMessage(error, "Could not delete supplier."));
+                }
+              }}
+            >
+              Delete
+            </Button>
+          </div>
+        ),
       },
     ],
-    [],
+    [fetchSuppliers, toast],
   );
 
-  function handleCreated(values: CreateScopeValues) {
-    const newRow: ScopeRow = {
-      id: `scope-${Date.now()}`,
-      scopeName: values.scopeName,
-      owner: values.owner,
-      scopeType: values.scopeType,
-      priority: values.priority,
-      status: "Draft",
-      startDate: values.startDate,
-      dueDate: values.dueDate,
-    };
+  function handleSupplierCreated() {
+    setIsSupplierPanelOpen(false);
+    fetchSuppliers();
+  }
 
-    setRows((prev) => [newRow, ...prev]);
-    setIsPanelOpen(false);
+  function handleSpendCreated() {
+    setIsSpendPanelOpen(false);
+    fetchSuppliers();
+  }
+
+  function handleSupplierUpdated() {
+    setIsEditPanelOpen(false);
+    setSelectedSupplier(null);
+    fetchSuppliers();
   }
 
   return (
     <section className="space-y-6">
       <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900 dark:text-scope-text">Projects</h1>
+          <h1 className="text-2xl font-semibold text-slate-900 dark:text-scope-text">Suppliers & Spend</h1>
           <p className="mt-1 text-sm text-slate-500 dark:text-scope-textMuted">
-            Manage complex scope lifecycles, ownership, and approvals.
+            Manage supplier profiles and create spend records tied to procurement activity.
           </p>
         </div>
-        <Button onClick={() => setIsPanelOpen(true)} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Create Scope
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button onClick={() => setIsSupplierPanelOpen(true)} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Add Supplier
+          </Button>
+          <Button variant="outline" onClick={() => setIsSpendPanelOpen(true)} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Add Spend
+          </Button>
+        </div>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Scope Registry</CardTitle>
+          <CardTitle>Supplier Registry</CardTitle>
           <CardDescription>
-            Sort, review, and paginate all active scope records.
+            Live supplier records from `/suppliers/`.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <DataTable
             columns={columns}
-            rows={rows}
+            rows={suppliers}
             rowKey={(row) => row.id}
-            pageSize={5}
+            pageSize={8}
+            loading={isLoading}
+            emptyMessage="No suppliers found. Add your first supplier to get started."
           />
         </CardContent>
       </Card>
 
       <SlideOver
-        open={isPanelOpen}
-        title="Create Scope"
-        description="Capture the scope details without leaving this page."
-        onClose={() => setIsPanelOpen(false)}
+        open={isSupplierPanelOpen}
+        title="Create Supplier"
+        description="Map supplier profile data to the backend SupplierCreate schema."
+        onClose={() => setIsSupplierPanelOpen(false)}
       >
         <CreateScopeForm
-          onCreated={handleCreated}
-          onCancel={() => setIsPanelOpen(false)}
+          onCreated={handleSupplierCreated}
+          onCancel={() => setIsSupplierPanelOpen(false)}
+        />
+      </SlideOver>
+
+      <SlideOver
+        open={isSpendPanelOpen}
+        title="Create Spend Record"
+        description="Capture procurement spend and map it to spend categories."
+        onClose={() => setIsSpendPanelOpen(false)}
+      >
+        <CreateSpendForm
+          suppliers={suppliers}
+          onCreated={handleSpendCreated}
+          onCancel={() => setIsSpendPanelOpen(false)}
+        />
+      </SlideOver>
+
+      <SlideOver
+        open={isEditPanelOpen}
+        title="Update Supplier"
+        description="Edit supplier attributes and sync updates to the backend."
+        onClose={() => {
+          setIsEditPanelOpen(false);
+          setSelectedSupplier(null);
+        }}
+      >
+        <EditSupplierForm
+          supplier={selectedSupplier}
+          onSaved={handleSupplierUpdated}
+          onCancel={() => {
+            setIsEditPanelOpen(false);
+            setSelectedSupplier(null);
+          }}
         />
       </SlideOver>
     </section>

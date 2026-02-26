@@ -5,8 +5,23 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Chrome } from "lucide-react";
 import { useGoogleLogin } from "@react-oauth/google";
-import api from "@/lib/api";
+import { isAxiosError } from "axios";
+import api, { setAuthToken } from "@/lib/api";
+import { useAuthStore } from "@/store/authStore";
+import type { Token, UserRead } from "@/types/api";
 import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input } from "@/components/ui";
+
+type ApiErrorResponse = {
+  detail?: string;
+};
+
+function getErrorMessage(error: unknown, fallback: string) {
+  if (isAxiosError<ApiErrorResponse>(error)) {
+    return error.response?.data?.detail || fallback;
+  }
+
+  return fallback;
+}
 
 export default function Signup() {
   const [fullName, setFullName] = useState("");
@@ -14,36 +29,53 @@ export default function Signup() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const setAuth = useAuthStore((state) => state.setAuth);
 
   const handleStandardSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
     try {
-      await api.post("/auth/signup/", {
+      const signupResponse = await api.post<UserRead>("/auth/signup", {
         full_name: fullName,
         email,
         password,
       });
-      router.push("/login");
-    } catch (err: any) {
-      setError(
-        err.response?.data?.detail ||
-          "An unexpected error occurred. Is your backend running?",
-      );
+
+      const formData = new URLSearchParams();
+      formData.append("username", email);
+      formData.append("password", password);
+
+      const loginResponse = await api.post<Token>("/auth/login", formData, {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      });
+
+      setAuthToken(loginResponse.data.access_token);
+      setAuth({
+        user: signupResponse.data,
+        isAuthenticated: true,
+      });
+      router.push("/dashboard");
+    } catch (error: unknown) {
+      setError(getErrorMessage(error, "An unexpected error occurred. Is your backend running?"));
     }
   };
 
   const loginWithGoogle = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
       try {
-        const response = await api.post("/auth/google/", {
+        const response = await api.post<Token>("/auth/google/", {
           token: tokenResponse.access_token,
         });
 
-        localStorage.setItem("access_token", response.data.access_token);
+        setAuthToken(response.data.access_token);
+        setAuth({
+          isAuthenticated: true,
+        });
         router.push("/dashboard");
-      } catch (err: any) {
+      } catch {
         setError("Google signup failed on the server.");
       }
     },

@@ -22,6 +22,8 @@ type DataTableProps<T> = {
   rows: T[];
   rowKey: (row: T) => string;
   pageSize?: number;
+  loading?: boolean;
+  emptyMessage?: string;
 };
 
 export default function DataTable<T>({
@@ -30,6 +32,8 @@ export default function DataTable<T>({
   rows,
   rowKey,
   pageSize = 6,
+  loading = false,
+  emptyMessage = "No data available.",
 }: DataTableProps<T>) {
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
@@ -155,7 +159,7 @@ export default function DataTable<T>({
                     colSpan={columns.length}
                     className="px-4 py-8 text-center text-sm text-slate-500 dark:text-scope-textMuted"
                   >
-                    No data available.
+                    {loading ? "Loading..." : emptyMessage}
                   </td>
                 </tr>
               )}

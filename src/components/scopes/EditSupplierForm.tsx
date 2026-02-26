@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -8,9 +8,9 @@ import { isAxiosError } from "axios";
 import api from "@/lib/api";
 import { Button, Input } from "@/components/ui";
 import { useToast } from "@/hooks/useToast";
-import type { SupplierCreate, SupplierRead } from "@/types/api";
+import type { SupplierRead } from "@/types/api";
 
-const supplierSchema = z.object({
+const supplierUpdateSchema = z.object({
   supplier_name: z.string().min(2, "Supplier name is required."),
   industry_locked: z.string().min(2, "Industry is required."),
   domain: z.string().optional(),
@@ -19,7 +19,13 @@ const supplierSchema = z.object({
   parent_id: z.string().uuid("Parent ID must be a valid UUID.").optional().or(z.literal("")),
 });
 
-export type CreateSupplierValues = z.infer<typeof supplierSchema>;
+type EditSupplierValues = z.infer<typeof supplierUpdateSchema>;
+
+type EditSupplierFormProps = {
+  supplier: SupplierRead | null;
+  onSaved: (supplier: SupplierRead) => void;
+  onCancel: () => void;
+};
 
 type ApiErrorResponse = {
   detail?: string;
@@ -33,11 +39,6 @@ function getErrorMessage(error: unknown, fallback: string) {
   return fallback;
 }
 
-type CreateScopeFormProps = {
-  onCreated: (supplier: SupplierRead) => void;
-  onCancel: () => void;
-};
-
 function optionalOrNull(value: string | undefined) {
   if (!value || value.trim() === "") {
     return null;
@@ -46,7 +47,7 @@ function optionalOrNull(value: string | undefined) {
   return value.trim();
 }
 
-export default function CreateScopeForm({ onCreated, onCancel }: CreateScopeFormProps) {
+export default function EditSupplierForm({ supplier, onSaved, onCancel }: EditSupplierFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const toast = useToast();
 
@@ -55,8 +56,8 @@ export default function CreateScopeForm({ onCreated, onCancel }: CreateScopeForm
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<CreateSupplierValues>({
-    resolver: zodResolver(supplierSchema),
+  } = useForm<EditSupplierValues>({
+    resolver: zodResolver(supplierUpdateSchema),
     defaultValues: {
       supplier_name: "",
       industry_locked: "",
@@ -67,28 +68,41 @@ export default function CreateScopeForm({ onCreated, onCancel }: CreateScopeForm
     },
   });
 
+  useEffect(() => {
+    if (!supplier) {
+      return;
+    }
+
+    reset({
+      supplier_name: supplier.supplier_name,
+      industry_locked: supplier.industry_locked,
+      domain: supplier.domain ?? "",
+      region: supplier.region ?? "",
+      sbti_status: supplier.sbti_status ?? "",
+      parent_id: supplier.parent_id ?? "",
+    });
+  }, [reset, supplier]);
+
   const onSubmit = handleSubmit(async (values) => {
+    if (!supplier) {
+      return;
+    }
+
     setIsSubmitting(true);
 
-    const payload: SupplierCreate = {
-      supplier_name: values.supplier_name.trim(),
-      industry_locked: values.industry_locked.trim(),
-      domain: optionalOrNull(values.domain),
-      region: optionalOrNull(values.region),
-      sbti_status: optionalOrNull(values.sbti_status),
-      parent_id: optionalOrNull(values.parent_id),
-    };
-
     try {
-      const response = await api.post<SupplierRead>("/suppliers/", payload);
-      onCreated(response.data);
-      toast.success("Supplier created", `${response.data.supplier_name} has been added.`);
-      reset();
+      const response = await api.patch<SupplierRead>(`/suppliers/${supplier.id}`, {
+        supplier_name: values.supplier_name.trim(),
+        industry_locked: values.industry_locked.trim(),
+        domain: optionalOrNull(values.domain),
+        region: optionalOrNull(values.region),
+        sbti_status: optionalOrNull(values.sbti_status),
+        parent_id: optionalOrNull(values.parent_id),
+      });
+      onSaved(response.data);
+      toast.success("Supplier updated", `${response.data.supplier_name} was updated.`);
     } catch (error: unknown) {
-      toast.error(
-        "Supplier creation failed",
-        getErrorMessage(error, "Please check the input fields and try again."),
-      );
+      toast.error("Supplier update failed", getErrorMessage(error, "Could not update supplier."));
     } finally {
       setIsSubmitting(false);
     }
@@ -143,8 +157,8 @@ export default function CreateScopeForm({ onCreated, onCancel }: CreateScopeForm
         <Button type="button" variant="ghost" onClick={onCancel}>
           Cancel
         </Button>
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Saving..." : "Create Supplier"}
+        <Button type="submit" disabled={isSubmitting || !supplier}>
+          {isSubmitting ? "Saving..." : "Update Supplier"}
         </Button>
       </div>
     </form>
