@@ -1,13 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { isAxiosError } from "axios";
 import {
   CheckCircle2,
   ClipboardList,
   DollarSign,
   Leaf,
+  Loader2,
 } from "lucide-react";
 import api from "@/lib/api";
 import { ActivityChart, RecentActivityFeed, StatCard } from "@/components/dashboard";
@@ -153,6 +153,8 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [isCalculating, setIsCalculating] = useState(false);
+  const [isSeedingDemo, setIsSeedingDemo] = useState(false);
+  const hasSeededRef = useRef(false);
 
   const loadDashboardData = useCallback(async () => {
     setIsLoading(true);
@@ -255,7 +257,39 @@ export default function DashboardPage() {
     ];
   }, [coverage, summary]);
 
-  const isEmpty = !isLoading && !hasError && statCards.every((card) => card.value === "N/A") && chartData.length === 0;
+  const totalRecords = Number(summary?.records_calculated || 0) + Number(summary?.records_uncalculated || 0);
+  const isEmpty = !isLoading && !hasError && totalRecords === 0;
+  const shouldShowSeedingState = isSeedingDemo || (isEmpty && !hasSeededRef.current);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function seedDemoData() {
+      if (!isEmpty || hasError || hasSeededRef.current) {
+        return;
+      }
+
+      hasSeededRef.current = true;
+      setIsSeedingDemo(true);
+
+      try {
+        await api.post("/spend/seed-demo-data");
+        await loadDashboardData();
+      } catch (error: unknown) {
+        toast.error("Demo setup failed", getErrorMessage(error, "Could not generate onboarding demo data."));
+      } finally {
+        if (isMounted) {
+          setIsSeedingDemo(false);
+        }
+      }
+    }
+
+    void seedDemoData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [hasError, isEmpty, loadDashboardData, toast]);
 
   if (isLoading) {
     return (
@@ -305,27 +339,18 @@ export default function DashboardPage() {
             </CardDescription>
           </CardHeader>
         </Card>
-      ) : isEmpty ? (
+      ) : shouldShowSeedingState ? (
         <Card>
-          <CardHeader>
-            <CardTitle>No spend analytics yet</CardTitle>
-            <CardDescription>
-              Add your first Supplier or Spend record.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-wrap gap-3">
-            <Link
-              href="/projects"
-              className="inline-flex h-11 items-center justify-center rounded-lg bg-scope-primary px-4 text-sm font-medium text-white transition hover:bg-scope-primaryHover"
-            >
-              Add Supplier
-            </Link>
-            <Link
-              href="/projects"
-              className="inline-flex h-11 items-center justify-center rounded-lg border border-slate-300 px-4 text-sm font-medium text-slate-900 transition hover:border-scope-primary hover:bg-scope-primary/10 dark:border-scope-border dark:text-scope-text"
-            >
-              Add Spend Record
-            </Link>
+          <CardContent className="flex min-h-[220px] flex-col items-center justify-center gap-3 text-center">
+            <Loader2 className="h-7 w-7 animate-spin text-scope-primary" />
+            <div>
+              <p className="text-base font-medium text-slate-900 dark:text-scope-text">
+                Setting up your intelligent workspace...
+              </p>
+              <p className="mt-1 text-sm text-slate-500 dark:text-scope-textMuted">
+                Generating sample suppliers and analyzing simulated spend...
+              </p>
+            </div>
           </CardContent>
         </Card>
       ) : (
