@@ -36,7 +36,7 @@ export default function Signup() {
     setError(null);
 
     try {
-      const signupResponse = await api.post<UserRead>("/auth/signup", {
+      await api.post<UserRead>("/auth/signup", {
         full_name: fullName,
         email,
         password,
@@ -53,8 +53,9 @@ export default function Signup() {
       });
 
       setAuthToken(loginResponse.data.access_token);
+      const userResponse = await api.get<UserRead>("/auth/me");
       setAuth({
-        user: signupResponse.data,
+        user: userResponse.data,
         isAuthenticated: true,
       });
       router.push("/dashboard");
@@ -71,7 +72,9 @@ export default function Signup() {
         });
 
         setAuthToken(response.data.access_token);
+        const userResponse = await api.get<UserRead>("/auth/me");
         setAuth({
+          user: userResponse.data,
           isAuthenticated: true,
         });
         router.push("/dashboard");

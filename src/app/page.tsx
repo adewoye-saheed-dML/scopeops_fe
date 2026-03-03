@@ -1,4 +1,6 @@
-import Link from "next/link";
+"use client";
+
+import { useRouter } from "next/navigation";
 import { BarChart3, DatabaseZap, Leaf } from "lucide-react";
 import { Button } from "@/components/ui";
 
@@ -21,6 +23,8 @@ const features = [
 ];
 
 export default function HomePage() {
+  const router = useRouter();
+
   return (
     <main className="min-h-screen bg-gradient-to-b from-white via-slate-50 to-slate-100 dark:from-scope-bg dark:via-scope-surface dark:to-scope-bg">
       <section className="mx-auto max-w-6xl px-6 pb-20 pt-24 sm:pt-28">
@@ -33,12 +37,10 @@ export default function HomePage() {
             audit-ready ESG reports in minutes.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <Link href="/login">
-              <Button variant="outline">Log in</Button>
-            </Link>
-            <Link href="/signup">
-              <Button>Get Started</Button>
-            </Link>
+            <Button variant="outline" onClick={() => router.push("/login")}>
+              Log in
+            </Button>
+            <Button onClick={() => router.push("/signup")}>Get Started</Button>
           </div>
         </div>
       </section>

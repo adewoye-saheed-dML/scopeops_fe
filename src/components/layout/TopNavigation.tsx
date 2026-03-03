@@ -51,14 +51,23 @@ export default function TopNavigation({
 }: TopNavigationProps) {
   const { user, clearAuth } = useAuthStore();
   const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const breadcrumbs = useBreadcrumbs(pathname);
+  const notificationsRef = useRef<HTMLDivElement | null>(null);
   const profileMenuRef = useRef<HTMLDivElement | null>(null);
   const { theme, ready, toggleTheme } = useThemePreference();
   const isDark = theme === "dark";
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
+      if (
+        notificationsRef.current &&
+        !notificationsRef.current.contains(event.target as Node)
+      ) {
+        setNotificationsOpen(false);
+      }
       if (
         profileMenuRef.current &&
         !profileMenuRef.current.contains(event.target as Node)
@@ -110,6 +119,13 @@ export default function TopNavigation({
           <input
             type="search"
             placeholder="Search suppliers, contracts, emissions..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && searchQuery.trim()) {
+                router.push(`/projects?q=${encodeURIComponent(searchQuery.trim())}`);
+              }
+            }}
             className="h-10 w-full rounded-lg border border-slate-200 bg-white pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-scope-primary focus:outline-none focus:ring-2 focus:ring-scope-primary/30 dark:border-scope-border dark:bg-scope-bg/70 dark:text-scope-text dark:placeholder:text-scope-textMuted"
           />
         </div>
@@ -128,13 +144,38 @@ export default function TopNavigation({
           )}
         </button>
 
-        <button
-          type="button"
-          className="hidden rounded-md p-2 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-scope-primary focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:text-scope-textMuted dark:hover:bg-scope-surfaceMuted dark:hover:text-scope-text dark:focus-visible:ring-offset-scope-surface sm:inline-flex"
-          aria-label="Notifications"
-        >
-          <Bell className="h-5 w-5" />
-        </button>
+        <div ref={notificationsRef} className="relative hidden sm:inline-flex">
+          <button
+            type="button"
+            onClick={() => setNotificationsOpen((prev) => !prev)}
+            className="rounded-md p-2 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-scope-primary focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:text-scope-textMuted dark:hover:bg-scope-surfaceMuted dark:hover:text-scope-text dark:focus-visible:ring-offset-scope-surface"
+            aria-label="Notifications"
+          >
+            <Bell className="h-5 w-5" />
+          </button>
+          <div
+            className={cn(
+              "absolute right-0 top-full mt-2 w-80 rounded-lg border border-slate-200 bg-white p-2 shadow-lg transition-all dark:border-scope-border dark:bg-scope-surface dark:shadow-card",
+              notificationsOpen
+                ? "visible translate-y-0 opacity-100"
+                : "invisible -translate-y-1 opacity-0",
+            )}
+          >
+            <div className="mb-2 border-b border-slate-100 px-2 pb-2 pt-1 dark:border-scope-border/50">
+              <p className="text-sm font-semibold text-slate-900 dark:text-scope-text">Notifications</p>
+            </div>
+            <div className="flex flex-col gap-1">
+              <div className="cursor-pointer rounded-md p-2 transition-colors hover:bg-slate-50 dark:hover:bg-scope-surfaceMuted">
+                <p className="text-xs font-medium text-slate-900 dark:text-scope-text">Bulk upload successful</p>
+                <p className="mt-0.5 text-xs text-slate-500 dark:text-scope-textMuted">15 spend records imported from ERP_Q1.csv</p>
+              </div>
+              <div className="cursor-pointer rounded-md p-2 transition-colors hover:bg-slate-50 dark:hover:bg-scope-surfaceMuted">
+                <p className="text-xs font-medium text-slate-900 dark:text-scope-text">New emission factors</p>
+                <p className="mt-0.5 text-xs text-slate-500 dark:text-scope-textMuted">EPA 2024 supply chain factors are now available in your workspace.</p>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <div ref={profileMenuRef} className="relative">
           <button
@@ -159,6 +200,7 @@ export default function TopNavigation({
           >
             <button
               type="button"
+              onClick={() => { setProfileMenuOpen(false); router.push('/settings'); }}
               className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-scope-primary dark:text-scope-textMuted dark:hover:bg-scope-surfaceMuted dark:hover:text-scope-text"
             >
               <UserCircle2 className="h-4 w-4" />
@@ -166,6 +208,7 @@ export default function TopNavigation({
             </button>
             <button
               type="button"
+              onClick={() => { setProfileMenuOpen(false); router.push('/settings'); }}
               className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-scope-primary dark:text-scope-textMuted dark:hover:bg-scope-surfaceMuted dark:hover:text-scope-text"
             >
               <Settings className="h-4 w-4" />

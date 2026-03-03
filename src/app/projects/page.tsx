@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { isAxiosError } from "axios";
 import api from "@/lib/api";
@@ -40,6 +41,8 @@ function disclosureBadge(hasDisclosure: boolean) {
 
 export default function ProjectsPage() {
   const toast = useToast();
+  const searchParams = useSearchParams();
+  const query = searchParams.get("q")?.toLowerCase() || "";
   const [suppliers, setSuppliers] = useState<SupplierRead[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSupplierPanelOpen, setIsSupplierPanelOpen] = useState(false);
@@ -47,6 +50,7 @@ export default function ProjectsPage() {
   const [isEditPanelOpen, setIsEditPanelOpen] = useState(false);
   const [isCsvPanelOpen, setIsCsvPanelOpen] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState<SupplierRead | null>(null);
+  const [supplierToDelete, setSupplierToDelete] = useState<SupplierRead | null>(null);
 
   const fetchSuppliers = useCallback(async () => {
     setIsLoading(true);
@@ -126,20 +130,7 @@ export default function ProjectsPage() {
               variant="ghost"
               aria-label={`Delete ${row.supplier_name}`}
               title="Delete supplier"
-              onClick={async () => {
-                const shouldDelete = window.confirm(`Delete supplier "${row.supplier_name}"?`);
-                if (!shouldDelete) {
-                  return;
-                }
-
-                try {
-                  await api.delete(`/suppliers/${row.id}`);
-                  toast.success("Supplier deleted", `${row.supplier_name} has been removed.`);
-                  fetchSuppliers();
-                } catch (error: unknown) {
-                  toast.error("Delete failed", getErrorMessage(error, "Could not delete supplier."));
-                }
-              }}
+              onClick={() => setSupplierToDelete(row)}
             >
               <Trash2 className="h-4 w-4 text-error" />
             </Button>
@@ -170,6 +161,24 @@ export default function ProjectsPage() {
     setIsCsvPanelOpen(false);
     fetchSuppliers();
   }
+
+  async function handleConfirmDelete() {
+    if (!supplierToDelete) return;
+    try {
+      await api.delete(`/suppliers/${supplierToDelete.id}`);
+      toast.success("Supplier deleted", `${supplierToDelete.supplier_name} has been removed.`);
+      fetchSuppliers();
+    } catch (error: unknown) {
+      toast.error("Delete failed", getErrorMessage(error, "Could not delete supplier."));
+    } finally {
+      setSupplierToDelete(null);
+    }
+  }
+
+  const filteredSuppliers = suppliers.filter((supplier) =>
+    supplier.supplier_name.toLowerCase().includes(query) ||
+    supplier.industry_locked.toLowerCase().includes(query),
+  );
 
   return (
     <section className="space-y-6">
@@ -205,7 +214,7 @@ export default function ProjectsPage() {
         <CardContent>
           <DataTable
             columns={columns}
-            rows={suppliers}
+            rows={filteredSuppliers}
             rowKey={(row) => row.id}
             pageSize={8}
             loading={isLoading}
@@ -269,6 +278,21 @@ export default function ProjectsPage() {
           onCancel={() => setIsCsvPanelOpen(false)}
         />
       </SlideOver>
+
+      {supplierToDelete && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-scope-border dark:bg-scope-surface">
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-scope-text">Delete Supplier</h3>
+            <p className="mt-2 text-sm text-slate-500 dark:text-scope-textMuted">
+              Are you sure you want to delete &quot;{supplierToDelete.supplier_name}&quot;? All associated spend records will also be removed. This action cannot be undone.
+            </p>
+            <div className="mt-6 flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setSupplierToDelete(null)}>Cancel</Button>
+              <Button className="bg-error text-white hover:bg-error/90 dark:bg-error dark:text-white dark:hover:bg-error/90" onClick={handleConfirmDelete}>Delete</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

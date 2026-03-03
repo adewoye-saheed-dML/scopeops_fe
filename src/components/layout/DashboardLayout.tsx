@@ -13,8 +13,6 @@ type DashboardLayoutProps = {
   children: React.ReactNode;
 };
 
-const authRoutes = new Set(["/login", "/signup"]);
-
 function isActivePath(pathname: string, href: string) {
   if (href === "/") {
     return pathname === "/";
@@ -27,9 +25,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const isAuthRoute = authRoutes.has(pathname);
+  const isPublicRoute = ["/", "/login", "/signup"].includes(pathname);
 
-  if (isAuthRoute) {
+  if (isPublicRoute) {
     return <>{children}</>;
   }
 

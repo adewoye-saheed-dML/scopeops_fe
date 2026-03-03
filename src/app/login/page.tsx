@@ -8,7 +8,7 @@ import { useGoogleLogin } from "@react-oauth/google";
 import { isAxiosError } from "axios";
 import api, { setAuthToken } from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
-import type { Token } from "@/types/api";
+import type { Token, UserRead } from "@/types/api";
 import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input } from "@/components/ui";
 
 type ApiErrorResponse = {
@@ -39,7 +39,9 @@ export default function LoginPage() {
         });
 
         setAuthToken(response.data.access_token);
+        const userResponse = await api.get<UserRead>("/auth/me");
         setAuth({
+          user: userResponse.data,
           isAuthenticated: true,
         });
         router.push("/dashboard");
@@ -67,7 +69,9 @@ export default function LoginPage() {
       });
 
       setAuthToken(response.data.access_token);
+      const userResponse = await api.get<UserRead>("/auth/me");
       setAuth({
+        user: userResponse.data,
         isAuthenticated: true,
       });
       router.push("/dashboard");
