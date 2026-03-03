@@ -4,6 +4,7 @@ export interface UserRead {
   full_name: string | null;
   picture: string | null;
   provider: string;
+  is_admin?: boolean;
 }
 
 export interface UserCreate {

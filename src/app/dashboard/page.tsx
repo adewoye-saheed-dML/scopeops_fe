@@ -5,18 +5,51 @@ import { isAxiosError } from "axios";
 import {
   CheckCircle2,
   ClipboardList,
+  Download,
   DollarSign,
   Leaf,
   Loader2,
 } from "lucide-react";
+import {
+  Cell,
+  Legend,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+} from "recharts";
 import api from "@/lib/api";
-import { ActivityChart, RecentActivityFeed, StatCard } from "@/components/dashboard";
+import { ActivityChart, StatCard } from "@/components/dashboard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, Button } from "@/components/ui";
 import { useToast } from "@/hooks/useToast";
 
-type ApiRecord = Record<string, unknown>;
-type ChartPoint = { month: string; activity: number };
 type ApiErrorResponse = { detail?: string };
+type SpendSummary = {
+  total_spend: number;
+  total_emissions: number;
+  total_scope_1: number;
+  total_scope_2: number;
+  total_scope_3: number;
+  emission_intensity: number;
+  records_calculated: number;
+  records_uncalculated: number;
+};
+type SpendCoverage = {
+  total_spend: number;
+  covered_spend: number;
+  coverage_percentage: number;
+};
+type ChartPoint = { month: string; activity: number };
+type ScopeBreakdownPoint = { name: string; value: number; color: string };
+
+const mockActivityData: ChartPoint[] = [
+  { month: "Jan", activity: 12 },
+  { month: "Feb", activity: 18 },
+  { month: "Mar", activity: 16 },
+  { month: "Apr", activity: 22 },
+  { month: "May", activity: 27 },
+  { month: "Jun", activity: 31 },
+];
 
 function getErrorMessage(error: unknown, fallback: string) {
   if (isAxiosError<ApiErrorResponse>(error)) {
@@ -24,37 +57,6 @@ function getErrorMessage(error: unknown, fallback: string) {
   }
 
   return fallback;
-}
-
-function toNumber(value: unknown): number | null {
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return value;
-  }
-
-  if (typeof value === "string") {
-    const parsed = Number(value);
-    if (Number.isFinite(parsed)) {
-      return parsed;
-    }
-  }
-
-  return null;
-}
-
-function pickNumericByKeys(data: ApiRecord, keys: string[]): number | null {
-  const loweredKeys = keys.map((key) => key.toLowerCase());
-
-  for (const [key, value] of Object.entries(data)) {
-    const normalized = key.toLowerCase();
-    if (loweredKeys.some((k) => normalized.includes(k))) {
-      const numericValue = toNumber(value);
-      if (numericValue !== null) {
-        return numericValue;
-      }
-    }
-  }
-
-  return null;
 }
 
 function formatCurrency(value: number | null): string {
@@ -86,75 +88,15 @@ function formatPercent(value: number | null): string {
   return `${Math.round(normalized)}%`;
 }
 
-function mapToChartPoints(data: unknown): ChartPoint[] {
-  if (!Array.isArray(data)) {
-    return [];
-  }
-
-  return data
-    .map((item) => {
-      if (!item || typeof item !== "object") {
-        return null;
-      }
-
-      const row = item as ApiRecord;
-      const monthRaw = row.month ?? row.period ?? row.label ?? row.name ?? row.date;
-      const amountRaw = row.activity ?? row.co2e ?? row.emissions ?? row.spend ?? row.total ?? row.value;
-
-      const amount = toNumber(amountRaw);
-      if (!monthRaw || amount === null) {
-        return null;
-      }
-
-      return {
-        month: String(monthRaw),
-        activity: amount,
-      };
-    })
-    .filter((point): point is ChartPoint => point !== null);
-}
-
-const recentActivities = [
-  {
-    id: "1",
-    user: "Ava Patel",
-    action: "approved baseline for",
-    target: "Scope 3 - Logistics",
-    timestamp: "5 minutes ago",
-  },
-  {
-    id: "2",
-    user: "Marcus Reed",
-    action: "submitted supplier evidence in",
-    target: "Project Terra",
-    timestamp: "18 minutes ago",
-  },
-  {
-    id: "3",
-    user: "Nina Kim",
-    action: "updated emission factor set for",
-    target: "North America Region",
-    timestamp: "43 minutes ago",
-  },
-  {
-    id: "4",
-    user: "Leo Santos",
-    action: "closed approval task in",
-    target: "Q1 Procurement Audit",
-    timestamp: "1 hour ago",
-  },
-];
-
 export default function DashboardPage() {
   const toast = useToast();
-  const [summary, setSummary] = useState<ApiRecord | null>(null);
-  const [coverage, setCoverage] = useState<ApiRecord | null>(null);
-  const [chartData, setChartData] = useState<ChartPoint[]>([]);
+  const [summary, setSummary] = useState<SpendSummary | null>(null);
+  const [coverage, setCoverage] = useState<SpendCoverage | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [isCalculating, setIsCalculating] = useState(false);
   const [isSeedingDemo, setIsSeedingDemo] = useState(false);
-  const hasSeededRef = useRef(false);
+  const hasSeeded = useRef(false);
 
   const loadDashboardData = useCallback(async () => {
     setIsLoading(true);
@@ -162,34 +104,19 @@ export default function DashboardPage() {
 
     try {
       const [summaryResponse, coverageResponse] = await Promise.all([
-        api.get<ApiRecord>("/spend/summary"),
-        api.get<ApiRecord>("/spend/coverage"),
+        api.get<SpendSummary>("/spend/summary"),
+        api.get<SpendCoverage>("/spend/coverage"),
       ]);
 
-      const summaryData = summaryResponse.data ?? {};
-      const coverageData = coverageResponse.data ?? {};
-
-      const summarySeries = mapToChartPoints(
-        (summaryData.trend as unknown) ??
-          (summaryData.history as unknown) ??
-          (summaryData.by_month as unknown) ??
-          (summaryData.monthly as unknown),
-      );
-      const coverageSeries = mapToChartPoints(
-        (coverageData.trend as unknown) ??
-          (coverageData.history as unknown) ??
-          (coverageData.by_month as unknown) ??
-          (coverageData.monthly as unknown),
-      );
+      const summaryData = summaryResponse.data;
+      const coverageData = coverageResponse.data;
 
       setSummary(summaryData);
       setCoverage(coverageData);
-      setChartData(summarySeries.length > 0 ? summarySeries : coverageSeries);
     } catch {
       setHasError(true);
       setSummary(null);
       setCoverage(null);
-      setChartData([]);
     } finally {
       setIsLoading(false);
     }
@@ -212,14 +139,41 @@ export default function DashboardPage() {
     }
   }
 
-  const statCards = useMemo(() => {
-    const summaryData = summary ?? {};
-    const coverageData = coverage ?? {};
+  function handleExport() {
+    if (!summary) {
+      toast.error("Export failed", "Summary data is not available yet.");
+      return;
+    }
 
-    const totalSpend = pickNumericByKeys(summaryData, ["total_spend", "spend"]);
-    const totalCo2e = pickNumericByKeys(summaryData, ["total_co2e", "co2e", "emissions"]);
-    const spendRecords = pickNumericByKeys(summaryData, ["record", "entries", "count"]);
-    const coveragePercent = pickNumericByKeys(coverageData, ["coverage", "percent", "ratio"]);
+    const csvRows = [
+      ["Metric", "Value"],
+      ["Total Spend", String(summary.total_spend ?? 0)],
+      ["Total Emissions", String(summary.total_emissions ?? 0)],
+      ["Scope 1", String(summary.total_scope_1 ?? 0)],
+      ["Scope 2", String(summary.total_scope_2 ?? 0)],
+      ["Scope 3", String(summary.total_scope_3 ?? 0)],
+    ];
+
+    const csvContent = csvRows
+      .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, "\"\"")}"`).join(","))
+      .join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "scopeops_summary_report.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  }
+
+  const statCards = useMemo(() => {
+    const totalSpend = summary?.total_spend ?? null;
+    const totalEmissions = summary?.total_emissions ?? null;
+    const spendRecords = summary?.records_calculated ?? null;
+    const coveragePercent = coverage?.coverage_percentage ?? null;
 
     return [
       {
@@ -232,8 +186,8 @@ export default function DashboardPage() {
       },
       {
         title: "Total Calculated CO2e",
-        value: totalCo2e === null ? "N/A" : `${formatCompactNumber(totalCo2e)} tCO2e`,
-        trendValue: totalCo2e === null ? "N/A" : "Live",
+        value: totalEmissions === null ? "N/A" : `${formatCompactNumber(totalEmissions)} tCO2e`,
+        trendValue: totalEmissions === null ? "N/A" : "Live",
         trendDirection: "up" as const,
         description: "Calculated emissions from spend records",
         icon: Leaf,
@@ -256,20 +210,38 @@ export default function DashboardPage() {
       },
     ];
   }, [coverage, summary]);
+  const scopeBreakdownData = useMemo<ScopeBreakdownPoint[]>(
+    () => [
+      {
+        name: "Scope 1",
+        value: summary?.total_scope_1 ?? 0,
+        color: "#f97316",
+      },
+      {
+        name: "Scope 2",
+        value: summary?.total_scope_2 ?? 0,
+        color: "#22c55e",
+      },
+      {
+        name: "Scope 3",
+        value: summary?.total_scope_3 ?? 0,
+        color: "#3b82f6",
+      },
+    ],
+    [summary?.total_scope_1, summary?.total_scope_2, summary?.total_scope_3],
+  );
+  const hasScopeData = scopeBreakdownData.some((scope) => scope.value > 0);
 
-  const totalRecords = Number(summary?.records_calculated || 0) + Number(summary?.records_uncalculated || 0);
-  const isEmpty = !isLoading && !hasError && totalRecords === 0;
-  const shouldShowSeedingState = isSeedingDemo || (isEmpty && !hasSeededRef.current);
+  const totalSpend = summary?.total_spend ?? 0;
+  const shouldShowSeedingState = isSeedingDemo;
 
   useEffect(() => {
-    let isMounted = true;
-
     async function seedDemoData() {
-      if (!isEmpty || hasError || hasSeededRef.current) {
+      if (isLoading || hasError || totalSpend !== 0 || hasSeeded.current) {
         return;
       }
 
-      hasSeededRef.current = true;
+      hasSeeded.current = true;
       setIsSeedingDemo(true);
 
       try {
@@ -278,18 +250,12 @@ export default function DashboardPage() {
       } catch (error: unknown) {
         toast.error("Demo setup failed", getErrorMessage(error, "Could not generate onboarding demo data."));
       } finally {
-        if (isMounted) {
-          setIsSeedingDemo(false);
-        }
+        setIsSeedingDemo(false);
       }
     }
 
     void seedDemoData();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [hasError, isEmpty, loadDashboardData, toast]);
+  }, [hasError, isLoading, loadDashboardData, toast, totalSpend]);
 
   if (isLoading) {
     return (
@@ -324,9 +290,15 @@ export default function DashboardPage() {
               Monitor activity velocity, approvals, and compliance in one view.
             </p>
           </div>
-          <Button onClick={handleRunBatchCalculation} disabled={isCalculating}>
-            {isCalculating ? "Running..." : "Run Batch Calculation"}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={handleExport} disabled={!summary}>
+              <Download className="h-4 w-4" />
+              Export Report
+            </Button>
+            <Button onClick={handleRunBatchCalculation} disabled={isCalculating}>
+              {isCalculating ? "Running..." : "Run Batch Calculation"}
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -363,10 +335,45 @@ export default function DashboardPage() {
 
           <div className="grid gap-4 xl:grid-cols-3">
             <div className="xl:col-span-2">
-              <ActivityChart data={chartData} />
+              <ActivityChart data={mockActivityData} />
             </div>
             <div className="xl:col-span-1">
-              <RecentActivityFeed activities={recentActivities} />
+              <Card className="h-full">
+                <CardHeader>
+                  <CardTitle>Scope Breakdown</CardTitle>
+                  <CardDescription>
+                    Exact share of Scope 1, Scope 2, and Scope 3 from summary totals.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {hasScopeData ? (
+                    <div className="h-72 w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={scopeBreakdownData}
+                            dataKey="value"
+                            nameKey="name"
+                            innerRadius={64}
+                            outerRadius={92}
+                            paddingAngle={2}
+                          >
+                            {scopeBreakdownData.map((entry) => (
+                              <Cell key={entry.name} fill={entry.color} />
+                            ))}
+                          </Pie>
+                          <Tooltip formatter={(value) => `${Number(value).toFixed(2)} tCO2e`} />
+                          <Legend />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  ) : (
+                    <div className="flex h-72 items-center justify-center text-sm text-slate-500 dark:text-scope-textMuted">
+                      No scope emissions data yet.
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </div>
           </div>
         </div>

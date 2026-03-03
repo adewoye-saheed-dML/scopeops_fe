@@ -1,0 +1,133 @@
+"use client";
+
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+import { ChevronRight } from "lucide-react";
+import api from "@/lib/api";
+import { DataTable, type DataTableColumn } from "@/components/data-table";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui";
+import type { SupplierRead } from "@/types/api";
+
+type ProjectDetailPageProps = {
+  params: {
+    id: string;
+  };
+};
+
+type PlaceholderSpendRecord = {
+  id: string;
+  category_code: string;
+  fiscal_year: string;
+  spend_amount: string;
+  calculated_co2e: string;
+};
+
+function disclosureBadge(hasDisclosure: boolean) {
+  return (
+    <span
+      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
+        hasDisclosure ? "bg-success/20 text-success" : "bg-warning/20 text-warning"
+      }`}
+    >
+      SBTi Disclosure: {hasDisclosure ? "True" : "False"}
+    </span>
+  );
+}
+
+export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
+  const supplierId = params.id;
+  const [supplier, setSupplier] = useState<SupplierRead | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
+
+  useEffect(() => {
+    async function loadSupplier() {
+      setIsLoading(true);
+      setHasError(false);
+
+      try {
+        const response = await api.get<SupplierRead[]>("/suppliers/");
+        const matchedSupplier = (response.data ?? []).find((item) => item.id === supplierId) ?? null;
+        setSupplier(matchedSupplier);
+      } catch {
+        setHasError(true);
+        setSupplier(null);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    void loadSupplier();
+  }, [supplierId]);
+
+  const spendColumns = useMemo<DataTableColumn<PlaceholderSpendRecord>[]>(
+    () => [
+      { key: "category_code", header: "Category", sortable: true },
+      { key: "fiscal_year", header: "Fiscal Year", sortable: true },
+      { key: "spend_amount", header: "Spend Amount", sortable: true },
+      { key: "calculated_co2e", header: "Calculated CO2e", sortable: true },
+    ],
+    [],
+  );
+
+  const placeholderRows: PlaceholderSpendRecord[] = [];
+
+  return (
+    <section className="space-y-6">
+      <nav className="flex items-center gap-2 text-sm text-slate-500 dark:text-scope-textMuted">
+        <Link
+          href="/projects"
+          className="rounded-sm px-1 py-0.5 transition-colors hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-scope-primary dark:hover:text-scope-text"
+        >
+          Projects
+        </Link>
+        <ChevronRight className="h-4 w-4 text-slate-400 dark:text-scope-textMuted" />
+        <span className="truncate text-slate-900 dark:text-scope-text">
+          {supplier?.supplier_name || "Supplier Detail"}
+        </span>
+      </nav>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            {isLoading ? "Loading supplier..." : supplier?.supplier_name || "Supplier not found"}
+          </CardTitle>
+          <CardDescription>
+            {hasError
+              ? "Could not load supplier details right now."
+              : supplier
+                ? `${supplier.industry_locked} - ${supplier.region || "Region not specified"}`
+                : "We could not find a supplier matching this project ID."}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex items-center justify-between gap-3">
+          <div className="text-sm text-slate-500 dark:text-scope-textMuted">
+            Supplier ID: <span className="font-medium text-slate-700 dark:text-scope-text">{supplierId}</span>
+          </div>
+          {supplier ? disclosureBadge(supplier.has_disclosure) : null}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Spend Records</CardTitle>
+          <CardDescription>
+            Spend record endpoint is pending. This table is scaffolded for upcoming integration.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <DataTable
+            title="Spend Records"
+            columns={spendColumns}
+            rows={placeholderRows}
+            rowKey={(row) => row.id}
+            pageSize={8}
+            loading={false}
+            emptyMessage="No spend records yet. A `/spend/` GET endpoint will power this table next."
+          />
+        </CardContent>
+      </Card>
+    </section>
+  );
+}
+

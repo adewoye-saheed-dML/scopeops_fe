@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Plus } from "lucide-react";
+import Link from "next/link";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import { isAxiosError } from "axios";
 import api from "@/lib/api";
 import CreateScopeForm from "@/components/scopes/CreateScopeForm";
@@ -67,6 +68,14 @@ export default function ProjectsPage() {
         key: "supplier_name",
         header: "Supplier",
         sortable: true,
+        accessor: (row) => (
+          <Link
+            href={`/projects/${row.id}`}
+            className="rounded-sm font-medium text-scope-primary hover:text-scope-primaryHover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-scope-primary"
+          >
+            {row.supplier_name}
+          </Link>
+        ),
       },
       {
         key: "domain",
@@ -102,32 +111,21 @@ export default function ProjectsPage() {
               type="button"
               size="sm"
               variant="ghost"
+              aria-label={`Edit ${row.supplier_name}`}
+              title="Edit supplier"
               onClick={() => {
                 setSelectedSupplier(row);
                 setIsEditPanelOpen(true);
               }}
             >
-              Edit
+              <Pencil className="h-4 w-4" />
             </Button>
             <Button
               type="button"
               size="sm"
               variant="ghost"
-              onClick={async () => {
-                try {
-                  await api.get(`/suppliers/${row.id}/enterprise-rollup`);
-                  toast.success("Rollup generated", `Enterprise rollup ran for ${row.supplier_name}.`);
-                } catch (error: unknown) {
-                  toast.error("Rollup failed", getErrorMessage(error, "Could not generate rollup."));
-                }
-              }}
-            >
-              Rollup
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
+              aria-label={`Delete ${row.supplier_name}`}
+              title="Delete supplier"
               onClick={async () => {
                 const shouldDelete = window.confirm(`Delete supplier "${row.supplier_name}"?`);
                 if (!shouldDelete) {
@@ -143,7 +141,7 @@ export default function ProjectsPage() {
                 }
               }}
             >
-              Delete
+              <Trash2 className="h-4 w-4 text-error" />
             </Button>
           </div>
         ),

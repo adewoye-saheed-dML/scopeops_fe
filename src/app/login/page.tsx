@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Chrome } from "lucide-react";
+import { useGoogleLogin } from "@react-oauth/google";
 import { isAxiosError } from "axios";
 import api, { setAuthToken } from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
@@ -28,6 +30,25 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const loginWithGoogle = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        const response = await api.post<Token>("/auth/google/", {
+          token: tokenResponse.access_token,
+        });
+
+        setAuthToken(response.data.access_token);
+        setAuth({
+          isAuthenticated: true,
+        });
+        router.push("/dashboard");
+      } catch {
+        setError("Google signup failed on the server.");
+      }
+    },
+    onError: () => setError("Google signup failed."),
+  });
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -95,6 +116,23 @@ export default function LoginPage() {
               {isSubmitting ? "Logging in..." : "Log in"}
             </Button>
           </form>
+
+          <div className="flex items-center gap-3">
+            <div className="h-px flex-1 bg-scope-border" />
+            <span className="text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-scope-textMuted">
+              Or
+            </span>
+            <div className="h-px flex-1 bg-scope-border" />
+          </div>
+
+          <Button
+            onClick={() => loginWithGoogle()}
+            variant="outline"
+            className="w-full gap-2"
+          >
+            <Chrome className="h-4 w-4" />
+            Continue with Google
+          </Button>
 
           <p className="text-center text-sm text-slate-500 dark:text-scope-textMuted">
             No account yet?{" "}

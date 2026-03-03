@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Bell,
@@ -13,6 +14,7 @@ import {
   UserCircle2,
 } from "lucide-react";
 import { useThemePreference } from "@/hooks/useThemePreference";
+import { useAuthStore } from "@/store/authStore";
 import { cn } from "@/lib/utils";
 
 type TopNavigationProps = {
@@ -47,6 +49,8 @@ export default function TopNavigation({
   pathname,
   onOpenMobileMenu,
 }: TopNavigationProps) {
+  const { user, clearAuth } = useAuthStore();
+  const router = useRouter();
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const breadcrumbs = useBreadcrumbs(pathname);
   const profileMenuRef = useRef<HTMLDivElement | null>(null);
@@ -139,7 +143,9 @@ export default function TopNavigation({
             className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-slate-900 transition-colors hover:border-scope-primary/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-scope-primary focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:border-scope-border dark:bg-scope-bg/70 dark:text-scope-text dark:focus-visible:ring-offset-scope-surface"
           >
             <UserCircle2 className="h-5 w-5 text-slate-500 dark:text-scope-textMuted" />
-            <span className="hidden text-sm font-medium md:inline">Woyes</span>
+            <span className="hidden text-sm font-medium md:inline">
+              {user?.full_name || user?.email?.split("@")[0] || "User"}
+            </span>
             <ChevronDown className="h-4 w-4 text-slate-500 dark:text-scope-textMuted" />
           </button>
 
@@ -167,6 +173,7 @@ export default function TopNavigation({
             </button>
             <button
               type="button"
+              onClick={() => { clearAuth(); setProfileMenuOpen(false); router.push('/login'); }}
               className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-error transition-colors hover:bg-error/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-error"
             >
               Sign out
