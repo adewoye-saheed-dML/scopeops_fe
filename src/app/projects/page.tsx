@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Pencil, Plus, Trash2 } from "lucide-react";
@@ -39,7 +39,7 @@ function disclosureBadge(hasDisclosure: boolean) {
   );
 }
 
-export default function ProjectsPage() {
+function ProjectsPageContent() {
   const toast = useToast();
   const searchParams = useSearchParams();
   const query = searchParams.get("q")?.toLowerCase() || "";
@@ -294,5 +294,13 @@ export default function ProjectsPage() {
         </div>
       )}
     </section>
+  );
+}
+
+export default function ProjectsPage() {
+  return (
+    <Suspense fallback={<section className="space-y-6" />}>
+      <ProjectsPageContent />
+    </Suspense>
   );
 }

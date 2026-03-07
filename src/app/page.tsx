@@ -27,7 +27,26 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-white via-slate-50 to-slate-100 dark:from-scope-bg dark:via-scope-surface dark:to-scope-bg">
-      <section className="mx-auto max-w-6xl px-6 pb-20 pt-24 sm:pt-28">
+      <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6 lg:px-8">
+        <div className="flex items-center gap-3">
+          <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-scope-primary text-xs font-bold text-white shadow-sm">
+            SO
+          </span>
+          <span className="font-semibold tracking-tight text-slate-900 dark:text-scope-text">
+            ScopeOps
+          </span>
+        </div>
+        <nav>
+          <button
+            onClick={() => router.push("/login")}
+            className="text-sm font-medium text-slate-600 transition-colors hover:text-slate-900 dark:text-scope-textMuted dark:hover:text-scope-text"
+          >
+            Log in <span aria-hidden="true">&rarr;</span>
+          </button>
+        </nav>
+      </header>
+
+      <section className="mx-auto max-w-6xl px-6 pb-20 pt-16 sm:pt-20">
         <div className="mx-auto max-w-3xl text-center">
           <h1 className="text-balance text-4xl font-semibold leading-tight text-slate-900 dark:text-scope-text sm:text-5xl">
             Decarbonize Your Supply Chain with Carbon Engine
@@ -66,3 +85,4 @@ export default function HomePage() {
     </main>
   );
 }
+
