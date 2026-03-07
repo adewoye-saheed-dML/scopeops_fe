@@ -111,7 +111,7 @@ export default function CsvUploader({ onUploaded, onCancel }: CsvUploaderProps) 
     setIsUploading(true);
     try {
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("fi le", file);
 
       await api.post("/spend/bulk-upload", formData, {
         headers: {
