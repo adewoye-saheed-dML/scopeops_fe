@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { BarChart3, DatabaseZap, Leaf } from "lucide-react";
 import { Button } from "@/components/ui";
@@ -28,14 +29,7 @@ export default function HomePage() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-white via-slate-50 to-slate-100 dark:from-scope-bg dark:via-scope-surface dark:to-scope-bg">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6 lg:px-8">
-        <div className="flex items-center gap-3">
-          <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-scope-primary text-xs font-bold text-white shadow-sm">
-            SO
-          </span>
-          <span className="font-semibold tracking-tight text-slate-900 dark:text-scope-text">
-            ScopeOps
-          </span>
-        </div>
+        <Image src="/logo.png" alt="ScopeOps Logo" width={180} height={44} className="h-auto w-36 object-contain" priority />
         <nav>
           <button
             onClick={() => router.push("/login")}
@@ -85,4 +79,3 @@ export default function HomePage() {
     </main>
   );
 }
-

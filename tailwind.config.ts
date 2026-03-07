@@ -13,12 +13,13 @@ const config: Config = {
           border: "#263756",
           text: "#e6edf7",
           textMuted: "#9ab0d1",
-          primary: "#4f7cff",
-          primaryHover: "#3f6cf0",
-          accent: "#10b981",
+          primary: "#1A6FB3",
+          primaryHover: "#155a94",
+          accent: "#4CAF50",
+          ocean: "#233E6B",
         },
         success: {
-          DEFAULT: "#10b981",
+          DEFAULT: "#4CAF50",
           foreground: "#052f23",
           soft: "#b8f5df",
         },
@@ -44,3 +45,5 @@ const config: Config = {
 };
 
 export default config;
+
+
