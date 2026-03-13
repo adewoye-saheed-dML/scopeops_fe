@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { isAxiosError } from "axios";
 import Papa from "papaparse";
 import { useDropzone } from "react-dropzone";
 import { CloudUpload, Loader2 } from "lucide-react";
@@ -8,7 +9,6 @@ import api from "@/lib/api";
 import { useToast } from "@/hooks/useToast";
 import { DataTable, type DataTableColumn } from "@/components/data-table";
 import { Button } from "@/components/ui";
-import { getErrorMessage } from "@/lib/errors";
 
 type CsvRow = {
   id: string;
@@ -18,6 +18,24 @@ type CsvUploaderProps = {
   onUploaded: () => void;
   onCancel: () => void;
 };
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (isAxiosError(error) && error.response?.data?.detail) {
+    const detail = error.response.data.detail;
+    if (typeof detail === "string") return detail;
+    if (Array.isArray(detail)) {
+      return detail
+        .map((err: any) => {
+          const field =
+            err.loc && err.loc.length > 0 ? err.loc[err.loc.length - 1] : "Field";
+          return `${field}: ${err.msg}`;
+        })
+        .join(" | ");
+    }
+    return JSON.stringify(detail);
+  }
+  return fallback;
+}
 
 
 
@@ -101,7 +119,7 @@ export default function CsvUploader({ onUploaded, onCancel }: CsvUploaderProps) 
     setIsUploading(true);
     try {
       const formData = new FormData();
-      formData.append("fi le", file);
+      formData.append("file", file);
 
       await api.post("/spend/bulk-upload", formData);
 
@@ -177,6 +195,9 @@ export default function CsvUploader({ onUploaded, onCancel }: CsvUploaderProps) 
     </div>
   );
 }
+
+
+
 
 
 
