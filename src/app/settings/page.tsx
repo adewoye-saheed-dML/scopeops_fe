@@ -1,17 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { isAxiosError } from "axios";
 import { Shield, SlidersHorizontal, UserCircle2, type LucideIcon } from "lucide-react";
 import api from "@/lib/api";
 import { DataTable, type DataTableColumn } from "@/components/data-table";
 import { useToast } from "@/hooks/useToast";
 import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui";
 import { useAuthStore } from "@/store/authStore";
+import { getErrorMessage } from "@/lib/errors";
 
-type ApiErrorResponse = {
-  detail?: string;
-};
 
 type SettingsTab = "profile" | "emission_factors" | "admin_tools";
 type MappingRow = {
@@ -21,13 +18,6 @@ type MappingRow = {
   confidence_score: string;
 };
 
-function getErrorMessage(error: unknown, fallback: string) {
-  if (isAxiosError<ApiErrorResponse>(error)) {
-    return error.response?.data?.detail || fallback;
-  }
-
-  return fallback;
-}
 
 export default function SettingsPage() {
   const toast = useToast();
@@ -208,3 +198,7 @@ export default function SettingsPage() {
     </section>
   );
 }
+
+
+
+

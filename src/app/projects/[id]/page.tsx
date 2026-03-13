@@ -29,7 +29,7 @@ function disclosureBadge(hasDisclosure: boolean) {
         hasDisclosure ? "bg-success/20 text-success" : "bg-warning/20 text-warning"
       }`}
     >
-      SBTi Disclosure: {hasDisclosure ? "True" : "False"}
+      SBTi Disclosure: {hasDisclosure ? "Yes" : "No"}
     </span>
   );
 }
@@ -97,7 +97,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
               ? "Could not load supplier details right now."
               : supplier
                 ? `${supplier.industry_locked} - ${supplier.region || "Region not specified"}`
-                : "We could not find a supplier matching this project ID."}
+                : "We could not find a supplier with that ID."}
           </CardDescription>
         </CardHeader>
         <CardContent className="flex items-center justify-between gap-3">
@@ -112,7 +112,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
         <CardHeader>
           <CardTitle>Spend Records</CardTitle>
           <CardDescription>
-            Spend record endpoint is pending. This table is scaffolded for upcoming integration.
+            Spend records will appear here once they are available.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -123,11 +123,13 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
             rowKey={(row) => row.id}
             pageSize={8}
             loading={false}
-            emptyMessage="No spend records yet. A `/spend/` GET endpoint will power this table next."
+            emptyMessage="No spend records yet. Add spend to see it here."
           />
         </CardContent>
       </Card>
     </section>
   );
 }
+
+
 

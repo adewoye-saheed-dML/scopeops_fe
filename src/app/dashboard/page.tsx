@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { isAxiosError } from "axios";
 import {
   CheckCircle2,
   ClipboardList,
@@ -22,8 +21,8 @@ import api from "@/lib/api";
 import { ActivityChart, StatCard } from "@/components/dashboard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, Button } from "@/components/ui";
 import { useToast } from "@/hooks/useToast";
+import { getErrorMessage } from "@/lib/errors";
 
-type ApiErrorResponse = { detail?: string };
 type SpendSummary = {
   total_spend: number;
   total_emissions: number;
@@ -51,13 +50,6 @@ const mockActivityData: ChartPoint[] = [
   { month: "Jun", activity: 31 },
 ];
 
-function getErrorMessage(error: unknown, fallback: string) {
-  if (isAxiosError<ApiErrorResponse>(error)) {
-    return error.response?.data?.detail || fallback;
-  }
-
-  return fallback;
-}
 
 function formatCurrency(value: number | null): string {
   if (value === null) {
@@ -271,7 +263,7 @@ export default function DashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle>Loading dashboard...</CardTitle>
-            <CardDescription>Fetching spend summary and coverage metrics.</CardDescription>
+            <CardDescription>Loading spend summary and coverage.</CardDescription>
           </CardHeader>
         </Card>
       </section>
@@ -307,7 +299,7 @@ export default function DashboardPage() {
           <CardHeader>
             <CardTitle>Unable to load dashboard data</CardTitle>
             <CardDescription>
-              We could not fetch `/spend/summary` or `/spend/coverage` right now.
+              We could not load spend summary or coverage right now.
             </CardDescription>
           </CardHeader>
         </Card>
@@ -382,3 +374,9 @@ export default function DashboardPage() {
     </section>
   );
 }
+
+
+
+
+
+

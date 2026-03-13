@@ -4,12 +4,12 @@ import { useState } from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { isAxiosError } from "axios";
 import api from "@/lib/api";
 import { Button, Input } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/useToast";
 import type { SpendCreate, SpendRead, SupplierRead } from "@/types/api";
+import { getErrorMessage } from "@/lib/errors";
 
 const spendSchema = z.object({
   supplier_id: z.string().uuid("Supplier is required."),
@@ -25,17 +25,7 @@ const spendSchema = z.object({
 
 type CreateSpendValues = z.infer<typeof spendSchema>;
 
-type ApiErrorResponse = {
-  detail?: string;
-};
 
-function getErrorMessage(error: unknown, fallback: string) {
-  if (isAxiosError<ApiErrorResponse>(error)) {
-    return error.response?.data?.detail || fallback;
-  }
-
-  return fallback;
-}
 
 type CreateSpendFormProps = {
   suppliers: SupplierRead[];
@@ -199,8 +189,8 @@ export default function CreateSpendForm({ suppliers, onCreated, onCancel }: Crea
       />
 
       <Input
-        label="Factor Used ID (Optional)"
-        placeholder="UUID"
+        label="Emission Factor ID (Optional)"
+        placeholder="Paste factor ID"
         error={errors.factor_used_id?.message}
         {...register("factor_used_id")}
       />
@@ -216,3 +206,8 @@ export default function CreateSpendForm({ suppliers, onCreated, onCancel }: Crea
     </form>
   );
 }
+
+
+
+
+

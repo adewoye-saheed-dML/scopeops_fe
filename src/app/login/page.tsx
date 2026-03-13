@@ -5,23 +5,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Chrome } from "lucide-react";
 import { useGoogleLogin } from "@react-oauth/google";
-import { isAxiosError } from "axios";
 import api, { setAuthToken } from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 import type { Token, UserRead } from "@/types/api";
 import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input } from "@/components/ui";
+import { getErrorMessage } from "@/lib/errors";
 
-type ApiErrorResponse = {
-  detail?: string;
-};
 
-function getErrorMessage(error: unknown, fallback: string) {
-  if (isAxiosError<ApiErrorResponse>(error)) {
-    return error.response?.data?.detail || fallback;
-  }
-
-  return fallback;
-}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -152,3 +142,7 @@ export default function LoginPage() {
     </div>
   );
 }
+
+
+
+

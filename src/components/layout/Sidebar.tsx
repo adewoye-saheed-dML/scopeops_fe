@@ -89,7 +89,7 @@ export default function Sidebar({
         >
           <div className="flex items-center gap-3">
             <Image
-              src="/logo-light.svg"
+              src="/logo-light.png"
               alt="ScopeOps Logo"
               width={180}
               height={44}
@@ -100,7 +100,7 @@ export default function Sidebar({
               priority
             />
             <Image
-              src="/logo-dark.svg"
+              src="/logo-dark.png"
               alt="ScopeOps Logo"
               width={180}
               height={44}
@@ -156,7 +156,7 @@ export default function Sidebar({
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Image
-              src="/logo-light.svg"
+              src="/logo-light.png"
               alt="ScopeOps Logo"
               width={180}
               height={44}
@@ -164,7 +164,7 @@ export default function Sidebar({
               priority
             />
             <Image
-              src="/logo-dark.svg"
+              src="/logo-dark.png"
               alt="ScopeOps Logo"
               width={180}
               height={44}
@@ -188,3 +188,4 @@ export default function Sidebar({
     </>
   );
 }
+

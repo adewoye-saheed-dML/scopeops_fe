@@ -4,11 +4,11 @@ import { useState } from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { isAxiosError } from "axios";
 import api from "@/lib/api";
 import { Button, Input } from "@/components/ui";
 import { useToast } from "@/hooks/useToast";
 import type { SupplierCreate, SupplierRead } from "@/types/api";
+import { getErrorMessage } from "@/lib/errors";
 
 const supplierSchema = z.object({
   supplier_name: z.string().min(2, "Supplier name is required."),
@@ -21,17 +21,7 @@ const supplierSchema = z.object({
 
 export type CreateSupplierValues = z.infer<typeof supplierSchema>;
 
-type ApiErrorResponse = {
-  detail?: string;
-};
 
-function getErrorMessage(error: unknown, fallback: string) {
-  if (isAxiosError<ApiErrorResponse>(error)) {
-    return error.response?.data?.detail || fallback;
-  }
-
-  return fallback;
-}
 
 type CreateScopeFormProps = {
   onCreated: (supplier: SupplierRead) => void;
@@ -134,7 +124,7 @@ export default function CreateScopeForm({ onCreated, onCancel }: CreateScopeForm
 
       <Input
         label="Parent Supplier ID (Optional)"
-        placeholder="UUID"
+        placeholder="Paste supplier ID"
         error={errors.parent_id?.message}
         {...register("parent_id")}
       />
@@ -150,3 +140,8 @@ export default function CreateScopeForm({ onCreated, onCancel }: CreateScopeForm
     </form>
   );
 }
+
+
+
+
+

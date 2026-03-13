@@ -4,7 +4,6 @@ import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Pencil, Plus, Trash2 } from "lucide-react";
-import { isAxiosError } from "axios";
 import api from "@/lib/api";
 import CreateScopeForm from "@/components/scopes/CreateScopeForm";
 import CreateSpendForm from "@/components/scopes/CreateSpendForm";
@@ -14,18 +13,9 @@ import { DataTable, type DataTableColumn } from "@/components/data-table";
 import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, SlideOver } from "@/components/ui";
 import { useToast } from "@/hooks/useToast";
 import type { SupplierRead } from "@/types/api";
+import { getErrorMessage } from "@/lib/errors";
 
-type ApiErrorResponse = {
-  detail?: string;
-};
 
-function getErrorMessage(error: unknown, fallback: string) {
-  if (isAxiosError<ApiErrorResponse>(error)) {
-    return error.response?.data?.detail || fallback;
-  }
-
-  return fallback;
-}
 
 function disclosureBadge(hasDisclosure: boolean) {
   return (
@@ -208,7 +198,7 @@ function ProjectsPageContent() {
         <CardHeader>
           <CardTitle>Supplier Registry</CardTitle>
           <CardDescription>
-            Live supplier records from `/suppliers/`.
+            Up-to-date supplier records for your workspace.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -226,7 +216,7 @@ function ProjectsPageContent() {
       <SlideOver
         open={isSupplierPanelOpen}
         title="Create Supplier"
-        description="Map supplier profile data to the backend SupplierCreate schema."
+        description="Enter supplier details to start tracking spend and emissions."
         onClose={() => setIsSupplierPanelOpen(false)}
       >
         <CreateScopeForm
@@ -251,7 +241,7 @@ function ProjectsPageContent() {
       <SlideOver
         open={isEditPanelOpen}
         title="Update Supplier"
-        description="Edit supplier attributes and sync updates to the backend."
+        description="Update supplier details and save your changes."
         onClose={() => {
           setIsEditPanelOpen(false);
           setSelectedSupplier(null);
@@ -270,7 +260,7 @@ function ProjectsPageContent() {
       <SlideOver
         open={isCsvPanelOpen}
         title="Import ERP CSV"
-        description="Upload bulk ERP spend data for ingestion."
+        description="Upload a CSV to add spend records in bulk."
         onClose={() => setIsCsvPanelOpen(false)}
       >
         <CsvUploader
@@ -304,3 +294,9 @@ export default function ProjectsPage() {
     </Suspense>
   );
 }
+
+
+
+
+
+
