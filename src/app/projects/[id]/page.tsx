@@ -37,7 +37,7 @@ function disclosureBadge(hasDisclosure: boolean) {
 export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
   const supplierId = params.id;
   const [supplier, setSupplier] = useState<SupplierRead | null>(null);
-  const [spendRecords, setSpendRecords] = useState<any[]>([]);
+  const [spendRecords, setSpendRecords] = useState<PlaceholderSpendRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
 
@@ -48,7 +48,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
       try {
         const [supplierRes, spendRes] = await Promise.all([
           api.get<SupplierRead[]>("/suppliers/"),
-          api.get(`/spend/?supplier_id=${supplierId}`),
+          api.get<PlaceholderSpendRecord[]>(`/spend/?supplier_id=${supplierId}`),
         ]);
 
         const matchedSupplier = (supplierRes.data ?? []).find((item) => item.id === supplierId) ?? null;
@@ -133,6 +133,8 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
     </section>
   );
 }
+
+
 
 
 
