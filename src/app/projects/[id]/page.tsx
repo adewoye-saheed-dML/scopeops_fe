@@ -37,18 +37,23 @@ function disclosureBadge(hasDisclosure: boolean) {
 export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
   const supplierId = params.id;
   const [supplier, setSupplier] = useState<SupplierRead | null>(null);
+  const [spendRecords, setSpendRecords] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
-    async function loadSupplier() {
+    async function loadData() {
       setIsLoading(true);
       setHasError(false);
-
       try {
-        const response = await api.get<SupplierRead[]>("/suppliers/");
-        const matchedSupplier = (response.data ?? []).find((item) => item.id === supplierId) ?? null;
+        const [supplierRes, spendRes] = await Promise.all([
+          api.get<SupplierRead[]>("/suppliers/"),
+          api.get(`/spend/?supplier_id=${supplierId}`),
+        ]);
+
+        const matchedSupplier = (supplierRes.data ?? []).find((item) => item.id === supplierId) ?? null;
         setSupplier(matchedSupplier);
+        setSpendRecords(spendRes.data ?? []);
       } catch {
         setHasError(true);
         setSupplier(null);
@@ -56,8 +61,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
         setIsLoading(false);
       }
     }
-
-    void loadSupplier();
+    void loadData();
   }, [supplierId]);
 
   const spendColumns = useMemo<DataTableColumn<PlaceholderSpendRecord>[]>(
@@ -70,7 +74,6 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
     [],
   );
 
-  const placeholderRows: PlaceholderSpendRecord[] = [];
 
   return (
     <section className="space-y-6">
@@ -119,10 +122,10 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
           <DataTable
             title="Spend Records"
             columns={spendColumns}
-            rows={placeholderRows}
+            rows={spendRecords}
             rowKey={(row) => row.id}
             pageSize={8}
-            loading={false}
+            loading={isLoading}
             emptyMessage="No spend records yet. Add spend to see it here."
           />
         </CardContent>
@@ -130,6 +133,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
     </section>
   );
 }
+
 
 
 
