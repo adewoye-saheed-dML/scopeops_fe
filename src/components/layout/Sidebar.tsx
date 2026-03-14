@@ -57,9 +57,7 @@ function SidebarNav({
             aria-current={active ? "page" : undefined}
           >
             <Icon className="h-4 w-4 shrink-0" />
-            <span className={cn("truncate", collapsed && "hidden")}>
-              {item.label}
-            </span>
+            <span className={cn("truncate", collapsed && "hidden")}>{item.label}</span>
           </Link>
         );
       })}
@@ -91,11 +89,25 @@ export default function Sidebar({
         >
           <div className="flex items-center gap-3">
             <Image
-              src="/logo.png"
+              src="/logo-light.svg"
               alt="ScopeOps Logo"
               width={180}
               height={44}
-              className={cn("h-auto w-36 object-contain", collapsed && "hidden")}
+              className={cn(
+                "block h-auto w-36 object-contain dark:hidden",
+                collapsed && "hidden",
+              )}
+              priority
+            />
+            <Image
+              src="/logo-dark.svg"
+              alt="ScopeOps Logo"
+              width={180}
+              height={44}
+              className={cn(
+                "hidden h-auto w-36 object-contain dark:block",
+                collapsed && "hidden",
+              )}
               priority
             />
           </div>
@@ -122,9 +134,7 @@ export default function Sidebar({
             ) : (
               <PanelLeftClose className="h-4 w-4 shrink-0" />
             )}
-            <span className={cn(collapsed && "hidden")}>
-              {collapsed ? "Expand" : "Collapse"}
-            </span>
+            <span className={cn(collapsed && "hidden")}>{collapsed ? "Expand" : "Collapse"}</span>
           </button>
         </div>
       </aside>
@@ -146,11 +156,19 @@ export default function Sidebar({
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Image
-              src="/logo.png"
+              src="/logo-light.svg"
               alt="ScopeOps Logo"
               width={180}
               height={44}
-              className="h-auto w-36 object-contain"
+              className="block h-auto w-36 object-contain dark:hidden"
+              priority
+            />
+            <Image
+              src="/logo-dark.svg"
+              alt="ScopeOps Logo"
+              width={180}
+              height={44}
+              className="hidden h-auto w-36 object-contain dark:block"
               priority
             />
           </div>
@@ -165,11 +183,7 @@ export default function Sidebar({
           </button>
         </div>
 
-        <SidebarNav
-          pathname={pathname}
-          collapsed={false}
-          onNavigate={onMobileClose}
-        />
+        <SidebarNav pathname={pathname} collapsed={false} onNavigate={onMobileClose} />
       </aside>
     </>
   );

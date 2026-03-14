@@ -29,7 +29,22 @@ export default function HomePage() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-white via-slate-50 to-slate-100 dark:from-scope-bg dark:via-scope-surface dark:to-scope-bg">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6 lg:px-8">
-        <Image src="/logo.png" alt="ScopeOps Logo" width={180} height={44} className="h-auto w-36 object-contain" priority />
+        <Image
+          src="/logo-light.png"
+          alt="ScopeOps Logo"
+          width={180}
+          height={44}
+          className="block h-auto w-36 object-contain dark:hidden"
+          priority
+        />
+        <Image
+          src="/logo-dark.png"
+          alt="ScopeOps Logo"
+          width={180}
+          height={44}
+          className="hidden h-auto w-36 object-contain dark:block"
+          priority
+        />
         <nav>
           <button
             onClick={() => router.push("/login")}
