@@ -128,7 +128,7 @@ function ProjectsPageContent() {
         ),
       },
     ],
-    [fetchSuppliers, toast],
+    [],
   );
 
   function handleSupplierCreated() {
@@ -294,6 +294,7 @@ export default function ProjectsPage() {
     </Suspense>
   );
 }
+
 
 
 

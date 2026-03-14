@@ -12,7 +12,7 @@ export function getErrorMessage(error: unknown, fallback: string): string {
     // If it's a FastAPI 422 Validation Array
     if (Array.isArray(detail)) {
       return detail
-        .map((err: any) => {
+        .map((err: { loc?: Array<string | number>; msg?: string }) => {
           const field = err.loc && err.loc.length > 0 ? err.loc[err.loc.length - 1] : "Field";
           return `${field}: ${err.msg}`;
         })
@@ -24,3 +24,4 @@ export function getErrorMessage(error: unknown, fallback: string): string {
   }
   return fallback;
 }
+

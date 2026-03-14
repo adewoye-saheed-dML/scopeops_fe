@@ -25,7 +25,7 @@ function getErrorMessage(error: unknown, fallback: string): string {
     if (typeof detail === "string") return detail;
     if (Array.isArray(detail)) {
       return detail
-        .map((err: any) => {
+        .map((err: { loc?: Array<string | number>; msg?: string }) => {
           const field =
             err.loc && err.loc.length > 0 ? err.loc[err.loc.length - 1] : "Field";
           return `${field}: ${err.msg}`;
@@ -195,6 +195,7 @@ export default function CsvUploader({ onUploaded, onCancel }: CsvUploaderProps) 
     </div>
   );
 }
+
 
 
 
