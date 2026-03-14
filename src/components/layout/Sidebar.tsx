@@ -57,7 +57,7 @@ function SidebarNav({
             aria-current={active ? "page" : undefined}
           >
             <Icon className="h-4 w-4 shrink-0" />
-            <span className={cn("truncate", collapsed && "hidden")}>{item.label}</span>
+            <span className={cn("truncate", collapsed && "hidden")}>{item.name}</span>
           </Link>
         );
       })}

@@ -1,19 +1,9 @@
-import type { LucideIcon } from "lucide-react";
-import {
-  FolderKanban,
-  LayoutDashboard,
-  Settings,
-} from "lucide-react";
+import { LayoutDashboard, FolderKanban, Settings } from "lucide-react";
 
-export type NavigationItem = {
-  label: string;
-  href: string;
-  icon: LucideIcon;
-};
-
-export const navigationItems: NavigationItem[] = [
-  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Projects", href: "/projects", icon: FolderKanban },
-  { label: "Settings", href: "/settings", icon: Settings },
+export const navigationItems = [
+  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, current: true },
+  { name: "Suppliers", href: "/projects", icon: FolderKanban, current: false },
+  { name: "Settings", href: "/settings", icon: Settings, current: false },
 ];
 
+export const navigation = navigationItems;

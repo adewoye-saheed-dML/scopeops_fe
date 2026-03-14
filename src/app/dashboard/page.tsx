@@ -1,15 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
-import { BarChart3, Database, Globe, LineChart } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui";
+import { BarChart3, Database, Globe, LineChart, Download, Play, RefreshCw } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, Button } from "@/components/ui";
 import StatCard from "@/components/dashboard/StatCard";
 import ActivityChart from "@/components/dashboard/ActivityChart";
 import { DataTable, type DataTableColumn } from "@/components/data-table";
 import api from "@/lib/api";
+import { useToast } from "@/hooks/useToast";
 
-// 1. Define beautiful fallback demo data
 type DashboardMetrics = {
   total_spend: number;
   total_co2e: number;
@@ -22,7 +22,13 @@ type SupplierRow = {
   supplier_name: string;
   category_code: string;
 };
-const DEMO_METRICS = {
+
+type ActivityPoint = {
+  month: string;
+  activity: number;
+};
+
+const DEMO_METRICS: DashboardMetrics = {
   total_spend: 1017605,
   total_co2e: 28500,
   record_count: 142,
@@ -36,7 +42,8 @@ const DEMO_SUPPLIERS: SupplierRow[] = [
   { id: "demo-4", supplier_name: "WeWork", category_code: "FACILITIES_RENT" },
   { id: "demo-5", supplier_name: "Salesforce", category_code: "SOFTWARE_SUBSCRIPTION" },
 ];
-const DEMO_ACTIVITY = [
+
+const DEMO_ACTIVITY: ActivityPoint[] = [
   { month: "Jan", activity: 8 },
   { month: "Feb", activity: 12 },
   { month: "Mar", activity: 9 },
@@ -52,40 +59,54 @@ const DEMO_ACTIVITY = [
 ];
 
 export default function DashboardPage() {
+  const { success, error } = useToast();
   const [metrics, setMetrics] = useState<DashboardMetrics>({ total_spend: 0, total_co2e: 0, record_count: 0, coverage_percentage: 0 });
   const [suppliers, setSuppliers] = useState<SupplierRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isCalculating, setIsCalculating] = useState(false);
 
-  // 2. Fetch real data from the database
-  useEffect(() => {
-    async function fetchDashboardData() {
-      try {
-        const [summaryRes, suppliersRes] = await Promise.all([
-          api.get<DashboardMetrics>("/spend/summary"),
-          api.get<SupplierRow[]>("/suppliers/")
-        ]);
+  const fetchDashboardData = useCallback(async () => {
+    try {
+      const [summaryRes, suppliersRes] = await Promise.all([
+        api.get<DashboardMetrics>("/spend/summary"),
+        api.get<SupplierRow[]>("/suppliers/")
+      ]);
 
-        if (summaryRes.data) {
-          setMetrics({
-            total_spend: summaryRes.data.total_spend || 0,
-            total_co2e: summaryRes.data.total_co2e || 0,
-            record_count: summaryRes.data.record_count || 0,
-            coverage_percentage: summaryRes.data.coverage_percentage || 0
-          });
-        }
-        if (suppliersRes.data) {
-          setSuppliers(suppliersRes.data.slice(0, 5)); // Grab top 5
-        }
-      } catch (error) {
-        console.error("Failed to fetch dashboard data:", error);
-      } finally {
-        setIsLoading(false);
+      if (summaryRes.data) {
+        setMetrics({
+          total_spend: summaryRes.data.total_spend || 0,
+          total_co2e: summaryRes.data.total_co2e || 0,
+          record_count: summaryRes.data.record_count || 0,
+          coverage_percentage: summaryRes.data.coverage_percentage || 0
+        });
       }
+      if (suppliersRes.data) {
+        setSuppliers(suppliersRes.data.slice(0, 5));
+      }
+    } catch (errorValue) {
+      console.error("Failed to fetch dashboard data:", errorValue);
+    } finally {
+      setIsLoading(false);
     }
-    fetchDashboardData();
   }, []);
 
-  // 3. The "Intelligent Toggle" - If they have no records, show the demo!
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
+
+  const handleBatchCalculation = async () => {
+    setIsCalculating(true);
+    try {
+      const res = await api.post("/spend/calculate");
+      success("Calculation Complete", `Processed ${res.data.records_calculated || 0} records successfully.`);
+      await fetchDashboardData();
+    } catch (errorValue) {
+      error("Calculation Failed", "Could not complete the batch calculation.");
+    } finally {
+      setIsCalculating(false);
+    }
+  };
+
   const hasRealData = metrics.record_count > 0 || suppliers.length > 0;
   const displayMetrics = hasRealData ? metrics : DEMO_METRICS;
   const displaySuppliers = hasRealData ? suppliers : DEMO_SUPPLIERS;
@@ -110,18 +131,30 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
+      {/* HEADER & ACTION BUTTONS */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-scope-text">Operational Overview</h1>
           <p className="text-sm text-slate-500 dark:text-scope-textMuted">Monitor activity velocity, approvals, and compliance in one view.</p>
         </div>
-        {!hasRealData && !isLoading && (
-          <div className="rounded-full bg-amber-100 px-4 py-1.5 text-sm font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
-            Viewing Demo Data - Upload CSV to activate
-          </div>
-        )}
+        <div className="flex flex-wrap items-center gap-3">
+          {!hasRealData && !isLoading && (
+            <div className="rounded-full bg-amber-100 px-4 py-1.5 text-sm font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
+              Viewing Demo Data - Upload CSV to activate
+            </div>
+          )}
+          <Button variant="outline" size="sm" className="h-9 gap-2">
+            <Download className="h-4 w-4" />
+            <span className="hidden sm:inline-block">Export Report</span>
+          </Button>
+          <Button size="sm" className="h-9 gap-2" onClick={handleBatchCalculation} disabled={isCalculating}>
+            {isCalculating ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
+            <span className="hidden sm:inline-block">Run Batch Calculation</span>
+          </Button>
+        </div>
       </div>
 
+      {/* METRICS CARDS */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Total Spend"
@@ -157,23 +190,52 @@ export default function DashboardPage() {
         />
       </div>
 
+      {/* TOP SUPPLIERS REGISTRY (Full Width) */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Top Suppliers Registry</CardTitle>
+          <CardDescription>Click a supplier to view detailed spend and emissions.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <DataTable columns={supplierColumns} rows={displaySuppliers} rowKey={(row) => row.id} pageSize={5} loading={isLoading} />
+        </CardContent>
+      </Card>
+
+      {/* CHARTS GRID */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
         <Card className="lg:col-span-4">
-          <CardHeader>
-            <CardTitle>Top Suppliers Registry</CardTitle>
-            <CardDescription>Click a supplier to view detailed spend and emissions.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <DataTable
-              columns={supplierColumns}
-              rows={displaySuppliers}
-              rowKey={(row) => row.id}
-              pageSize={5}
-            />
-          </CardContent>
+          <ActivityChart data={DEMO_ACTIVITY} />
         </Card>
         <Card className="lg:col-span-3">
-          <ActivityChart data={DEMO_ACTIVITY} />
+          <CardHeader>
+            <CardTitle>Scope Breakdown</CardTitle>
+            <CardDescription>Exact share of Scope 1, Scope 2, and Scope 3 from summary totals.</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col items-center justify-center p-6">
+            <div className="relative flex h-48 w-48 items-center justify-center rounded-full border-[16px] border-slate-100 dark:border-slate-800">
+              <div className="absolute inset-0 rounded-full border-[16px] border-scope-primary border-r-transparent border-t-transparent mix-blend-multiply dark:mix-blend-screen" />
+              <div className="absolute inset-0 rounded-full border-[16px] border-scope-accent border-b-transparent border-l-transparent mix-blend-multiply dark:mix-blend-screen" />
+              <div className="absolute inset-0 rotate-45 rounded-full border-[16px] border-emerald-300 border-b-transparent border-r-transparent mix-blend-multiply dark:mix-blend-screen" />
+              <div className="text-center">
+                <span className="text-2xl font-bold text-slate-900 dark:text-scope-text">100%</span>
+                <span className="block text-xs text-slate-500 dark:text-scope-textMuted">Total Emissions</span>
+              </div>
+            </div>
+            <div className="mt-6 grid w-full grid-cols-3 gap-2 text-center text-sm">
+              <div>
+                <span className="mb-1 block h-3 w-3 mx-auto rounded-full bg-scope-primary" />
+                <span className="text-slate-600 dark:text-scope-textMuted">Scope 1</span>
+              </div>
+              <div>
+                <span className="mb-1 block h-3 w-3 mx-auto rounded-full bg-scope-accent" />
+                <span className="text-slate-600 dark:text-scope-textMuted">Scope 2</span>
+              </div>
+              <div>
+                <span className="mb-1 block h-3 w-3 mx-auto rounded-full bg-emerald-300" />
+                <span className="text-slate-600 dark:text-scope-textMuted">Scope 3</span>
+              </div>
+            </div>
+          </CardContent>
         </Card>
       </div>
     </div>

@@ -76,7 +76,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   )}
                 >
                   <Icon className="h-4 w-4" />
-                  <span>{item.label}</span>
+                  <span>{item.name}</span>
                 </Link>
               </li>
             );
