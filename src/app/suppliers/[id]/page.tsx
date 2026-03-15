@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState, use } from "react";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, LineChart, Globe } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import api from "@/lib/api";
 import { DataTable, type DataTableColumn } from "@/components/data-table";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui";
+import StatCard from "@/components/dashboard/StatCard";
 import type { SupplierRead } from "@/types/api";
 
 type ProjectDetailPageProps = {
@@ -36,6 +38,24 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
   const { id: supplierId } = use(params);
   const [supplier, setSupplier] = useState<SupplierRead | null>(null);
   const [spendRecords, setSpendRecords] = useState<PlaceholderSpendRecord[]>([]);
+  const { totalSpend, totalEmissions } = useMemo(() => {
+    return spendRecords.reduce((acc, record) => ({
+      totalSpend: acc.totalSpend + (Number(record.spend_amount) || 0),
+      totalEmissions: acc.totalEmissions + (Number(record.calculated_co2e) || 0)
+    }), { totalSpend: 0, totalEmissions: 0 });
+  }, [spendRecords]);
+  const chartData = useMemo(() => {
+    const categoryMap = spendRecords.reduce((acc, record) => {
+      const category = record.category_code || "Unknown";
+      const spend = Number(record.spend_amount) || 0;
+      acc[category] = (acc[category] || 0) + spend;
+      return acc;
+    }, {} as Record<string, number>);
+
+    return Object.entries(categoryMap)
+      .map(([name, spend]) => ({ name, spend }))
+      .sort((a, b) => b.spend - a.spend);
+  }, [spendRecords]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
 
@@ -109,6 +129,45 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
         </CardContent>
       </Card>
 
+      </div>
+
+      {chartData.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Spend by Category</CardTitle>
+            <CardDescription>Breakdown of total spend allocated across different categories.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-80 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData} margin={{ top: 10, right: 10, left: 10, bottom: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                  <XAxis
+                    dataKey="name"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: "#64748b", fontSize: 12 }}
+                    dy={10}
+                  />
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: "#64748b", fontSize: 12 }}
+                    tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
+                  />
+                  <Tooltip
+                    cursor={{ fill: "#f1f5f9" }}
+                    formatter={(value: number) => [new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value), "Total Spend"]}
+                    contentStyle={{ borderRadius: "8px", border: "none", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}
+                  />
+                  <Bar dataKey="spend" fill="#0f172a" radius={[4, 4, 0, 0]} maxBarSize={60} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle>Spend Records</CardTitle>
@@ -131,6 +190,11 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
     </section>
   );
 }
+
+
+
+
+
 
 
 
