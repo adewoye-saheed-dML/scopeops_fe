@@ -13,6 +13,9 @@ import { useToast } from "@/hooks/useToast";
 type DashboardMetrics = {
   total_spend: number;
   total_co2e: number;
+  total_scope_1: number;
+  total_scope_2: number;
+  total_scope_3: number;
   record_count: number;
   coverage_percentage: number;
 };
@@ -31,6 +34,9 @@ type ActivityPoint = {
 const DEMO_METRICS: DashboardMetrics = {
   total_spend: 1017605,
   total_co2e: 28500,
+  total_scope_1: 5000,
+  total_scope_2: 10000,
+  total_scope_3: 13500,
   record_count: 142,
   coverage_percentage: 84
 };
@@ -60,7 +66,15 @@ const DEMO_ACTIVITY: ActivityPoint[] = [
 
 export default function DashboardPage() {
   const { success, error } = useToast();
-  const [metrics, setMetrics] = useState<DashboardMetrics>({ total_spend: 0, total_co2e: 0, record_count: 0, coverage_percentage: 0 });
+  const [metrics, setMetrics] = useState<DashboardMetrics>({
+    total_spend: 0,
+    total_co2e: 0,
+    total_scope_1: 0,
+    total_scope_2: 0,
+    total_scope_3: 0,
+    record_count: 0,
+    coverage_percentage: 0
+  });
   const [suppliers, setSuppliers] = useState<SupplierRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCalculating, setIsCalculating] = useState(false);
@@ -76,6 +90,9 @@ export default function DashboardPage() {
         setMetrics({
           total_spend: summaryRes.data.total_spend || 0,
           total_co2e: summaryRes.data.total_co2e || 0,
+          total_scope_1: summaryRes.data.total_scope_1 || 0,
+          total_scope_2: summaryRes.data.total_scope_2 || 0,
+          total_scope_3: summaryRes.data.total_scope_3 || 0,
           record_count: summaryRes.data.record_count || 0,
           coverage_percentage: summaryRes.data.coverage_percentage || 0
         });
@@ -110,6 +127,10 @@ export default function DashboardPage() {
   const hasRealData = metrics.record_count > 0 || suppliers.length > 0;
   const displayMetrics = hasRealData ? metrics : DEMO_METRICS;
   const displaySuppliers = hasRealData ? suppliers : DEMO_SUPPLIERS;
+  const totalScopeEmissions = displayMetrics.total_scope_1 + displayMetrics.total_scope_2 + displayMetrics.total_scope_3;
+  const scope1Percentage = totalScopeEmissions > 0 ? (displayMetrics.total_scope_1 / totalScopeEmissions) * 100 : 0;
+  const scope2Percentage = totalScopeEmissions > 0 ? (displayMetrics.total_scope_2 / totalScopeEmissions) * 100 : 0;
+  const scope3Percentage = totalScopeEmissions > 0 ? (displayMetrics.total_scope_3 / totalScopeEmissions) * 100 : 0;
 
   const supplierColumns: DataTableColumn<SupplierRow>[] = [
     { key: "supplier_name", header: "Supplier Name" },
@@ -221,22 +242,28 @@ export default function DashboardPage() {
               <div className="absolute inset-0 rounded-full border-[16px] border-scope-accent border-b-transparent border-l-transparent mix-blend-multiply dark:mix-blend-screen" />
               <div className="absolute inset-0 rotate-45 rounded-full border-[16px] border-emerald-300 border-b-transparent border-r-transparent mix-blend-multiply dark:mix-blend-screen" />
               <div className="text-center">
-                <span className="text-2xl font-bold text-slate-900 dark:text-scope-text">100%</span>
-                <span className="block text-xs text-slate-500 dark:text-scope-textMuted">Total Emissions</span>
+                <span className="text-2xl font-bold text-slate-900 dark:text-scope-text">{displayMetrics.total_co2e.toLocaleString(undefined, { maximumFractionDigits: 1 })}</span>
+                <span className="block text-xs text-slate-500 dark:text-scope-textMuted">Total Emissions (tCO2e)</span>
               </div>
             </div>
             <div className="mt-6 grid w-full grid-cols-3 gap-2 text-center text-sm">
               <div>
                 <span className="mb-1 block h-3 w-3 mx-auto rounded-full bg-scope-primary" />
-                <span className="text-slate-600 dark:text-scope-textMuted">Scope 1</span>
+                <span className="text-slate-600 dark:text-scope-textMuted">
+                  {`Scope 1 • ${scope1Percentage.toFixed(1)}% • ${displayMetrics.total_scope_1.toLocaleString(undefined, { maximumFractionDigits: 1 })} tCO2e`}
+                </span>
               </div>
               <div>
                 <span className="mb-1 block h-3 w-3 mx-auto rounded-full bg-scope-accent" />
-                <span className="text-slate-600 dark:text-scope-textMuted">Scope 2</span>
+                <span className="text-slate-600 dark:text-scope-textMuted">
+                  {`Scope 2 • ${scope2Percentage.toFixed(1)}% • ${displayMetrics.total_scope_2.toLocaleString(undefined, { maximumFractionDigits: 1 })} tCO2e`}
+                </span>
               </div>
               <div>
                 <span className="mb-1 block h-3 w-3 mx-auto rounded-full bg-emerald-300" />
-                <span className="text-slate-600 dark:text-scope-textMuted">Scope 3</span>
+                <span className="text-slate-600 dark:text-scope-textMuted">
+                  {`Scope 3 • ${scope3Percentage.toFixed(1)}% • ${displayMetrics.total_scope_3.toLocaleString(undefined, { maximumFractionDigits: 1 })} tCO2e`}
+                </span>
               </div>
             </div>
           </CardContent>
@@ -245,3 +272,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+
