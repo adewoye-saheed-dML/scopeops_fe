@@ -20,7 +20,7 @@ type DashboardMetrics = {
 type SupplierRow = {
   id: string;
   supplier_name: string;
-  category_code: string;
+  total_co2e: number;
 };
 
 type ActivityPoint = {
@@ -36,11 +36,11 @@ const DEMO_METRICS: DashboardMetrics = {
 };
 
 const DEMO_SUPPLIERS: SupplierRow[] = [
-  { id: "demo-1", supplier_name: "Amazon Web Services", category_code: "CLOUD_SERVICES" },
-  { id: "demo-2", supplier_name: "Dell Technologies", category_code: "IT_HARDWARE" },
-  { id: "demo-3", supplier_name: "FedEx", category_code: "LOGISTICS_FREIGHT" },
-  { id: "demo-4", supplier_name: "WeWork", category_code: "FACILITIES_RENT" },
-  { id: "demo-5", supplier_name: "Salesforce", category_code: "SOFTWARE_SUBSCRIPTION" },
+  { id: "demo-1", supplier_name: "Amazon Web Services", total_co2e: 12500 },
+  { id: "demo-2", supplier_name: "Dell Technologies", total_co2e: 8400 },
+  { id: "demo-3", supplier_name: "FedEx", total_co2e: 15675 },
+  { id: "demo-4", supplier_name: "WeWork", total_co2e: 4975 },
+  { id: "demo-5", supplier_name: "Salesforce", total_co2e: 9820 },
 ];
 
 const DEMO_ACTIVITY: ActivityPoint[] = [
@@ -69,7 +69,7 @@ export default function DashboardPage() {
     try {
       const [summaryRes, suppliersRes] = await Promise.all([
         api.get<DashboardMetrics>("/spend/summary"),
-        api.get<SupplierRow[]>("/suppliers/")
+        api.get<SupplierRow[]>("/suppliers/dashboard-stats")
       ]);
 
       if (summaryRes.data) {
@@ -113,7 +113,11 @@ export default function DashboardPage() {
 
   const supplierColumns: DataTableColumn<SupplierRow>[] = [
     { key: "supplier_name", header: "Supplier Name" },
-    { key: "category_code", header: "Primary Category" },
+    {
+      key: "total_co2e",
+      header: "Total Emissions (tCO2e)",
+      accessor: (row) => row.total_co2e ? row.total_co2e.toLocaleString(undefined, { maximumFractionDigits: 1 }) : "0"
+    },
     {
       key: "actions",
       header: "",
