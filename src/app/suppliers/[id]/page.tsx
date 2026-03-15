@@ -128,7 +128,23 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
           {supplier ? disclosureBadge(supplier.has_disclosure) : null}
         </CardContent>
       </Card>
-
+      <div className="grid gap-4 md:grid-cols-2">
+        <StatCard
+          title="Total Supplier Spend"
+          value={new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(totalSpend)}
+          icon={LineChart}
+          description="Total spend recorded for this supplier"
+          trendValue="0%"
+          trendDirection="up"
+        />
+        <StatCard
+          title="Total Supplier Emissions"
+          value={`${totalEmissions.toLocaleString(undefined, { maximumFractionDigits: 1 })} tCO2e`}
+          icon={Globe}
+          description="Total calculated emissions for this supplier"
+          trendValue="0%"
+          trendDirection="up"
+        />
       </div>
 
       {chartData.length > 0 && (
@@ -190,6 +206,14 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
     </section>
   );
 }
+
+
+
+
+
+
+
+
 
 
 
