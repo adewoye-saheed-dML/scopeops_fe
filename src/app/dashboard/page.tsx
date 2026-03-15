@@ -250,19 +250,19 @@ export default function DashboardPage() {
               <div>
                 <span className="mb-1 block h-3 w-3 mx-auto rounded-full bg-scope-primary" />
                 <span className="text-slate-600 dark:text-scope-textMuted">
-                  {`Scope 1 • ${scope1Percentage.toFixed(1)}% • ${displayMetrics.total_scope_1.toLocaleString(undefined, { maximumFractionDigits: 1 })} tCO2e`}
+                  {`Scope 1 - ${scope1Percentage.toFixed(1)}% - ${displayMetrics.total_scope_1.toLocaleString(undefined, { maximumFractionDigits: 1 })} tCO2e`}
                 </span>
               </div>
               <div>
                 <span className="mb-1 block h-3 w-3 mx-auto rounded-full bg-scope-accent" />
                 <span className="text-slate-600 dark:text-scope-textMuted">
-                  {`Scope 2 • ${scope2Percentage.toFixed(1)}% • ${displayMetrics.total_scope_2.toLocaleString(undefined, { maximumFractionDigits: 1 })} tCO2e`}
+                  {`Scope 2 - ${scope2Percentage.toFixed(1)}% - ${displayMetrics.total_scope_2.toLocaleString(undefined, { maximumFractionDigits: 1 })} tCO2e`}
                 </span>
               </div>
               <div>
                 <span className="mb-1 block h-3 w-3 mx-auto rounded-full bg-emerald-300" />
                 <span className="text-slate-600 dark:text-scope-textMuted">
-                  {`Scope 3 • ${scope3Percentage.toFixed(1)}% • ${displayMetrics.total_scope_3.toLocaleString(undefined, { maximumFractionDigits: 1 })} tCO2e`}
+                  {`Scope 3 - ${scope3Percentage.toFixed(1)}% - ${displayMetrics.total_scope_3.toLocaleString(undefined, { maximumFractionDigits: 1 })} tCO2e`}
                 </span>
               </div>
             </div>
