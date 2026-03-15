@@ -77,7 +77,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
     <section className="space-y-6">
       <nav className="flex items-center gap-2 text-sm text-slate-500 dark:text-scope-textMuted">
         <Link
-          href="/projects"
+          href="/suppliers"
           className="rounded-sm px-1 py-0.5 transition-colors hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-scope-primary dark:hover:text-scope-text"
         >
           Projects
@@ -131,6 +131,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
     </section>
   );
 }
+
 
 
 

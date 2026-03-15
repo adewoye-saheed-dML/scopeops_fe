@@ -146,7 +146,7 @@ export default function DashboardPage() {
         row.id.startsWith("demo") ? (
           <span className="text-sm text-slate-400">Demo only</span>
         ) : (
-          <Link href={`/projects/${row.id}`} className="text-scope-primary hover:text-scope-primaryHover text-sm font-medium">
+          <Link href={`/suppliers/${row.id}`} className="text-scope-primary hover:text-scope-primaryHover text-sm font-medium">
             View Data &rarr;
           </Link>
         )
@@ -272,4 +272,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
 
