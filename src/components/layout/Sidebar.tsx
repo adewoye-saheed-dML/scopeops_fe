@@ -87,7 +87,7 @@ export default function Sidebar({
             collapsed ? "justify-center" : "justify-between",
           )}
         >
-          <div className="flex items-center gap-3">
+          <Link href="/dashboard" className="flex items-center gap-3">
             <Image
               src="/logo-light.png"
               alt="ScopeOps Logo"
@@ -110,7 +110,7 @@ export default function Sidebar({
               )}
               priority
             />
-          </div>
+          </Link>
         </div>
 
         <div className="flex-1 overflow-y-auto px-3 py-4">
@@ -154,7 +154,7 @@ export default function Sidebar({
         )}
       >
         <div className="mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <Link href="/dashboard" className="flex items-center gap-3">
             <Image
               src="/logo-light.png"
               alt="ScopeOps Logo"
@@ -171,7 +171,7 @@ export default function Sidebar({
               className="hidden h-auto w-36 object-contain dark:block"
               priority
             />
-          </div>
+          </Link>
 
           <button
             type="button"
@@ -188,4 +188,5 @@ export default function Sidebar({
     </>
   );
 }
+
 

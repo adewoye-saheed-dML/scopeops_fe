@@ -176,7 +176,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
                     formatter={(value: number) => [new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value), "Total Spend"]}
                     contentStyle={{ borderRadius: "8px", border: "none", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}
                   />
-                  <Bar dataKey="spend" fill="#0f172a" radius={[4, 4, 0, 0]} maxBarSize={60} />
+                  <Bar dataKey="spend" fill="#3b82f6" radius={[4, 4, 0, 0]} maxBarSize={60} />
                 </BarChart>
               </ResponsiveContainer>
             </div>

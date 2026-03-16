@@ -64,7 +64,7 @@ function ProjectsPageContent() {
         sortable: true,
         accessor: (row) => (
           <Link
-            href={`/projects/${row.id}`}
+            href={`/suppliers/${row.id}`}
             className="rounded-sm font-medium text-scope-primary hover:text-scope-primaryHover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-scope-primary"
           >
             {row.supplier_name}
