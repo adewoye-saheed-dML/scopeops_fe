@@ -11,7 +11,7 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Carbon Engine",
+  title: "ScopeOps",
   description: "Procurement Carbon Engine",
 };
 
@@ -30,3 +30,4 @@ export default function RootLayout({
     </html>
   );
 }
+
