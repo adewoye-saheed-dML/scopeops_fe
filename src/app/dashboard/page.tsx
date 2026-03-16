@@ -168,20 +168,22 @@ export default function DashboardPage() {
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-scope-text">Operational Overview</h1>
           <p className="text-sm text-slate-500 dark:text-scope-textMuted">Monitor activity velocity, approvals, and compliance in one view.</p>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
           {!hasRealData && !isLoading && (
             <div className="rounded-full bg-amber-100 px-4 py-1.5 text-sm font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
               Viewing Demo Data - Upload CSV to activate
             </div>
           )}
-          <Button variant="outline" size="sm" className="h-9 gap-2">
-            <Download className="h-4 w-4" />
-            <span className="hidden sm:inline-block">Export Report</span>
-          </Button>
-          <Button size="sm" className="h-9 gap-2" onClick={handleBatchCalculation} disabled={isCalculating}>
-            {isCalculating ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
-            <span className="hidden sm:inline-block">Run Batch Calculation</span>
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button variant="outline" size="sm" className="h-9 gap-2">
+              <Download className="h-4 w-4" />
+              <span className="hidden sm:inline-block">Export Report</span>
+            </Button>
+            <Button size="sm" className="h-9 gap-2" onClick={handleBatchCalculation} disabled={isCalculating}>
+              {isCalculating ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
+              <span className="hidden sm:inline-block">Run Batch Calculation</span>
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -297,6 +299,7 @@ export default function DashboardPage() {
     </div>
   );
 }
+
 
 
 
