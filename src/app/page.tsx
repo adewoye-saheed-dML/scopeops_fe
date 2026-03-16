@@ -58,7 +58,7 @@ export default function HomePage() {
       <section className="mx-auto max-w-6xl px-6 pb-20 pt-16 sm:pt-20">
         <div className="mx-auto max-w-3xl text-center">
           <h1 className="text-balance text-4xl font-semibold leading-tight text-slate-900 dark:text-scope-text sm:text-5xl">
-            Decarbonize Your Supply Chain with Carbon Engine
+            Decarbonize Your Supply Chain with ScopeOps
           </h1>
           <p className="mt-5 text-pretty text-base text-slate-600 dark:text-scope-textMuted sm:text-lg">
             Ingest ERP data, accurately calculate Scope 1, 2, and 3 emissions, and generate
