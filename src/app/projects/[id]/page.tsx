@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, use } from "react";
 import { ChevronRight } from "lucide-react";
 import api from "@/lib/api";
 import { DataTable, type DataTableColumn } from "@/components/data-table";
@@ -9,9 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import type { SupplierRead } from "@/types/api";
 
 type ProjectDetailPageProps = {
-  params: {
-    id: string;
-  };
+  params: Promise<{ id: string }>;
 };
 
 type PlaceholderSpendRecord = {
@@ -35,7 +33,7 @@ function disclosureBadge(hasDisclosure: boolean) {
 }
 
 export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
-  const supplierId = params.id;
+  const { id: supplierId } = use(params);
   const [supplier, setSupplier] = useState<SupplierRead | null>(null);
   const [spendRecords, setSpendRecords] = useState<PlaceholderSpendRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -133,6 +131,14 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
     </section>
   );
 }
+
+
+
+
+
+
+
+
 
 
 
