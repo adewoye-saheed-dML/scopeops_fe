@@ -117,7 +117,7 @@ export default function DashboardPage() {
       const res = await api.post("/spend/calculate");
       success("Calculation Complete", `Processed ${res.data.records_calculated || 0} records successfully.`);
       await fetchDashboardData();
-    } catch (errorValue) {
+    } catch {
       error("Calculation Failed", "Could not complete the batch calculation.");
     } finally {
       setIsCalculating(false);
@@ -272,5 +272,6 @@ export default function DashboardPage() {
     </div>
   );
 }
+
 
 
