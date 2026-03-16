@@ -88,28 +88,35 @@ export default function Sidebar({
           )}
         >
           <Link href="/dashboard" className="flex items-center gap-3">
-            <Image
-              src="/logo-light.png"
-              alt="ScopeOps Logo"
-              width={180}
-              height={44}
-              className={cn(
-                "block h-auto w-36 object-contain dark:hidden",
-                collapsed && "hidden",
-              )}
-              priority
-            />
-            <Image
-              src="/logo-dark.png"
-              alt="ScopeOps Logo"
-              width={180}
-              height={44}
-              className={cn(
-                "hidden h-auto w-36 object-contain dark:block",
-                collapsed && "hidden",
-              )}
-              priority
-            />
+            {collapsed ? (
+              <Image
+                src="/logo-icon.png"
+                alt="ScopeOps Icon"
+                width={32}
+                height={32}
+                className="block h-8 w-8 object-contain"
+                priority
+              />
+            ) : (
+              <>
+                <Image
+                  src="/logo-light.png"
+                  alt="ScopeOps Logo"
+                  width={180}
+                  height={44}
+                  className="block h-auto w-36 object-contain dark:hidden"
+                  priority
+                />
+                <Image
+                  src="/logo-dark.png"
+                  alt="ScopeOps Logo"
+                  width={180}
+                  height={44}
+                  className="hidden h-auto w-36 object-contain dark:block"
+                  priority
+                />
+              </>
+            )}
           </Link>
         </div>
 
@@ -188,5 +195,6 @@ export default function Sidebar({
     </>
   );
 }
+
 
 
