@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState, use } from "react";
 import { ChevronRight, LineChart, Globe } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import api from "@/lib/api";
 import { DataTable, type DataTableColumn } from "@/components/data-table";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui";
@@ -20,6 +20,9 @@ type PlaceholderSpendRecord = {
   fiscal_year: string;
   spend_amount: string;
   calculated_co2e: string;
+  calculated_scope_1?: string | number;
+  calculated_scope_2?: string | number;
+  calculated_scope_3?: string | number;
 };
 
 function disclosureBadge(hasDisclosure: boolean) {
@@ -38,12 +41,26 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
   const { id: supplierId } = use(params);
   const [supplier, setSupplier] = useState<SupplierRead | null>(null);
   const [spendRecords, setSpendRecords] = useState<PlaceholderSpendRecord[]>([]);
-  const { totalSpend, totalEmissions } = useMemo(() => {
+  const { totalSpend, totalEmissions, totalScope1, totalScope2, totalScope3 } = useMemo(() => {
     return spendRecords.reduce((acc, record) => ({
       totalSpend: acc.totalSpend + (Number(record.spend_amount) || 0),
-      totalEmissions: acc.totalEmissions + (Number(record.calculated_co2e) || 0)
-    }), { totalSpend: 0, totalEmissions: 0 });
+      totalEmissions: acc.totalEmissions + (Number(record.calculated_co2e) || 0),
+      totalScope1: acc.totalScope1 + (Number(record.calculated_scope_1) || 0),
+      totalScope2: acc.totalScope2 + (Number(record.calculated_scope_2) || 0),
+      totalScope3: acc.totalScope3 + (Number(record.calculated_scope_3) || 0),
+    }), { totalSpend: 0, totalEmissions: 0, totalScope1: 0, totalScope2: 0, totalScope3: 0 });
   }, [spendRecords]);
+
+  const totalScopeEmissions = totalScope1 + totalScope2 + totalScope3;
+  const scope1Percentage = totalScopeEmissions > 0 ? (totalScope1 / totalScopeEmissions) * 100 : 0;
+  const scope2Percentage = totalScopeEmissions > 0 ? (totalScope2 / totalScopeEmissions) * 100 : 0;
+  const scope3Percentage = totalScopeEmissions > 0 ? (totalScope3 / totalScopeEmissions) * 100 : 0;
+  const scopeData = [
+    { name: "Scope 1", value: totalScope1, fill: "#2563eb" },
+    { name: "Scope 2", value: totalScope2, fill: "#7c3aed" },
+    { name: "Scope 3", value: totalScope3, fill: "#6ee7b7" },
+  ].filter(item => item.value > 0);
+
   const chartData = useMemo(() => {
     const categoryMap = spendRecords.reduce((acc, record) => {
       const category = record.category_code || "Unknown";
@@ -148,40 +165,96 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
       </div>
 
       {chartData.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Spend by Category</CardTitle>
-            <CardDescription>Breakdown of total spend allocated across different categories.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-80 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} margin={{ top: 10, right: 10, left: 10, bottom: 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                  <XAxis
-                    dataKey="name"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: "#64748b", fontSize: 12 }}
-                    dy={10}
-                  />
-                  <YAxis
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: "#64748b", fontSize: 12 }}
-                    tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
-                  />
-                  <Tooltip
-                    cursor={{ fill: "#f1f5f9" }}
-                    formatter={(value: number) => [new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value), "Total Spend"]}
-                    contentStyle={{ borderRadius: "8px", border: "none", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}
-                  />
-                  <Bar dataKey="spend" fill="#3b82f6" radius={[4, 4, 0, 0]} maxBarSize={60} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
+          <Card className="lg:col-span-4">
+            <CardHeader>
+              <CardTitle>Spend by Category</CardTitle>
+              <CardDescription>Breakdown of total spend allocated across different categories.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-80 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={chartData} margin={{ top: 10, right: 10, left: 10, bottom: 20 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                    <XAxis
+                      dataKey="name"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: "#64748b", fontSize: 12 }}
+                      dy={10}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: "#64748b", fontSize: 12 }}
+                      tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
+                    />
+                    <Tooltip
+                      cursor={{ fill: "#f1f5f9" }}
+                      formatter={(value: number) => [new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value), "Total Spend"]}
+                      contentStyle={{ borderRadius: "8px", border: "none", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}
+                    />
+                    <Bar dataKey="spend" fill="#3b82f6" radius={[4, 4, 0, 0]} maxBarSize={60} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="lg:col-span-3">
+            <CardHeader>
+              <CardTitle>Scope Breakdown</CardTitle>
+              <CardDescription>Share of Scope 1, Scope 2, and Scope 3 for this supplier.</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col items-center justify-center p-6">
+              <div className="relative flex h-64 w-full items-center justify-center">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={scopeData}
+                      innerRadius={70}
+                      outerRadius={90}
+                      paddingAngle={2}
+                      dataKey="value"
+                      stroke="none"
+                    >
+                      {scopeData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} className="transition-all duration-300 hover:opacity-80" />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      formatter={(value: number) => [`${value.toLocaleString(undefined, { maximumFractionDigits: 1 })} tCO2e`, "Emissions"]}
+                      contentStyle={{ borderRadius: "8px", border: "none", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-2xl font-bold text-slate-900 dark:text-scope-text">
+                    {totalEmissions.toLocaleString(undefined, { maximumFractionDigits: 1 })}
+                  </span>
+                  <span className="block text-xs text-slate-500 dark:text-scope-textMuted">Total (tCO2e)</span>
+                </div>
+              </div>
+              <div className="mt-6 grid w-full grid-cols-3 gap-2 text-center text-xs sm:text-sm">
+                <div>
+                  <span className="mb-1 block h-3 w-3 mx-auto rounded-full bg-[#2563eb]" />
+                  <span className="text-slate-600 dark:text-scope-textMuted font-medium">Scope 1</span>
+                  <span className="block text-slate-500 dark:text-scope-textMuted">{scope1Percentage.toFixed(1)}%</span>
+                </div>
+                <div>
+                  <span className="mb-1 block h-3 w-3 mx-auto rounded-full bg-[#7c3aed]" />
+                  <span className="text-slate-600 dark:text-scope-textMuted font-medium">Scope 2</span>
+                  <span className="block text-slate-500 dark:text-scope-textMuted">{scope2Percentage.toFixed(1)}%</span>
+                </div>
+                <div>
+                  <span className="mb-1 block h-3 w-3 mx-auto rounded-full bg-[#6ee7b7]" />
+                  <span className="text-slate-600 dark:text-scope-textMuted font-medium">Scope 3</span>
+                  <span className="block text-slate-500 dark:text-scope-textMuted">{scope3Percentage.toFixed(1)}%</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       )}
 
       <Card>
@@ -206,6 +279,14 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
     </section>
   );
 }
+
+
+
+
+
+
+
+
 
 
 

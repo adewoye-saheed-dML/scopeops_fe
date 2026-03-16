@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { BarChart3, Database, Globe, LineChart, Download, Play, RefreshCw } from "lucide-react";
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, Button } from "@/components/ui";
 import StatCard from "@/components/dashboard/StatCard";
 import ActivityChart from "@/components/dashboard/ActivityChart";
@@ -154,6 +155,11 @@ export default function DashboardPage() {
     }
   ];
 
+  const scopeData = [
+    { name: "Scope 1", value: displayMetrics.total_scope_1, fill: "#2563eb" },
+    { name: "Scope 2", value: displayMetrics.total_scope_2, fill: "#7c3aed" },
+    { name: "Scope 3", value: displayMetrics.total_scope_3, fill: "#6ee7b7" },
+  ].filter(item => item.value > 0);
   return (
     <div className="space-y-6">
       {/* HEADER & ACTION BUTTONS */}
@@ -237,30 +243,49 @@ export default function DashboardPage() {
             <CardDescription>Exact share of Scope 1, Scope 2, and Scope 3 from summary totals.</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col items-center justify-center p-6">
-            <div className="relative flex h-48 w-48 items-center justify-center rounded-full border-[16px] border-slate-100 dark:border-slate-800">
-              <div className="absolute inset-0 rounded-full border-[16px] border-scope-primary border-r-transparent border-t-transparent mix-blend-multiply dark:mix-blend-screen" />
-              <div className="absolute inset-0 rounded-full border-[16px] border-scope-accent border-b-transparent border-l-transparent mix-blend-multiply dark:mix-blend-screen" />
-              <div className="absolute inset-0 rotate-45 rounded-full border-[16px] border-emerald-300 border-b-transparent border-r-transparent mix-blend-multiply dark:mix-blend-screen" />
-              <div className="text-center">
-                <span className="text-2xl font-bold text-slate-900 dark:text-scope-text">{displayMetrics.total_co2e.toLocaleString(undefined, { maximumFractionDigits: 1 })}</span>
-                <span className="block text-xs text-slate-500 dark:text-scope-textMuted">Total Emissions (tCO2e)</span>
+            <div className="relative flex h-64 w-full items-center justify-center">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={scopeData}
+                    innerRadius={80}
+                    outerRadius={100}
+                    paddingAngle={2}
+                    dataKey="value"
+                    stroke="none"
+                  >
+                    {scopeData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} className="transition-all duration-300 hover:opacity-80" />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    formatter={(value: number) => [`${value.toLocaleString(undefined, { maximumFractionDigits: 1 })} tCO2e`, "Emissions"]}
+                    contentStyle={{ borderRadius: "8px", border: "none", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+                <span className="text-2xl font-bold text-slate-900 dark:text-scope-text">
+                  {displayMetrics.total_co2e.toLocaleString(undefined, { maximumFractionDigits: 1 })}
+                </span>
+                <span className="block text-xs text-slate-500 dark:text-scope-textMuted">Total (tCO2e)</span>
               </div>
             </div>
             <div className="mt-6 grid w-full grid-cols-3 gap-2 text-center text-sm">
               <div>
-                <span className="mb-1 block h-3 w-3 mx-auto rounded-full bg-scope-primary" />
+                <span className="mb-1 block h-3 w-3 mx-auto rounded-full bg-[#2563eb]" />
                 <span className="text-slate-600 dark:text-scope-textMuted">
                   {`Scope 1 - ${scope1Percentage.toFixed(1)}% - ${displayMetrics.total_scope_1.toLocaleString(undefined, { maximumFractionDigits: 1 })} tCO2e`}
                 </span>
               </div>
               <div>
-                <span className="mb-1 block h-3 w-3 mx-auto rounded-full bg-scope-accent" />
+                <span className="mb-1 block h-3 w-3 mx-auto rounded-full bg-[#7c3aed]" />
                 <span className="text-slate-600 dark:text-scope-textMuted">
                   {`Scope 2 - ${scope2Percentage.toFixed(1)}% - ${displayMetrics.total_scope_2.toLocaleString(undefined, { maximumFractionDigits: 1 })} tCO2e`}
                 </span>
               </div>
               <div>
-                <span className="mb-1 block h-3 w-3 mx-auto rounded-full bg-emerald-300" />
+                <span className="mb-1 block h-3 w-3 mx-auto rounded-full bg-[#6ee7b7]" />
                 <span className="text-slate-600 dark:text-scope-textMuted">
                   {`Scope 3 - ${scope3Percentage.toFixed(1)}% - ${displayMetrics.total_scope_3.toLocaleString(undefined, { maximumFractionDigits: 1 })} tCO2e`}
                 </span>
@@ -272,6 +297,11 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+
+
+
+
 
 
 
