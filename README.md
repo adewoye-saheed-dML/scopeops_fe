@@ -2,6 +2,11 @@
 
 ScopeOps is a modern, responsive web application built to streamline supplier carbon data collection, track procurement spending, and analyze Scope 3 emissions. Designed for sustainability teams and procurement managers, it transforms raw supply-chain data into actionable, decision-grade climate insights.
 
+<img width="1217" height="768" alt="Image" src="https://github.com/user-attachments/assets/097702ee-fa46-49d9-9c5d-f438aaa60752" />
+
+- **Live link:** https://scopeopsfe-adewoyesaheed1845-nzqvbt9r.leapcell.dev/
+
+
 ## Features
 
 - **Dashboard Analytics:** High-level overview of supplier activities, carbon metrics, and recent data uploads.
