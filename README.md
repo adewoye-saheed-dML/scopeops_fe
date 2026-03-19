@@ -5,7 +5,8 @@ ScopeOps is a modern, responsive web application built to streamline supplier ca
 <img width="1217" height="768" alt="Image" src="https://github.com/user-attachments/assets/097702ee-fa46-49d9-9c5d-f438aaa60752" />
 
 - **Live link:** https://scopeopsfe-adewoyesaheed1845-nzqvbt9r.leapcell.dev/
-
+- **Backend Repo:** https://github.com/adewoye-saheed-dML/scopeops
+- **Backend doc link:** https://scopeops-adewoyesaheed1845-unpbv5or.leapcell.dev/docs
 
 ## Features
 
