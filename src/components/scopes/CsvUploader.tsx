@@ -55,7 +55,12 @@ export default function CsvUploader({ onUploaded, onCancel }: CsvUploaderProps) 
   const [allRows, setAllRows] = useState<CsvRow[]>([]);
   const [parseError, setParseError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-
+  const [uploadSummary, setUploadSummary] = useState<{
+    inserted_count: number;
+    review_count: number;
+    review_warnings: string[];
+    errors: string[];
+  } | null>(null);
   const previewRows = useMemo(() => allRows.slice(0, 5), [allRows]);
   const headers = useMemo(() => {
     if (allRows.length === 0) {
@@ -121,19 +126,58 @@ export default function CsvUploader({ onUploaded, onCancel }: CsvUploaderProps) 
       const formData = new FormData();
       formData.append("file", file);
 
-      await api.post("/spend/bulk-upload", formData, {
+      const response = await api.post("/spend/bulk-upload", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
 
-      toast.success("CSV import complete", `${allRows.length} records were ingested.`);
-      onUploaded();
+      const { inserted_count, review_count, review_warnings, errors } = response.data || {};
+      setUploadSummary({
+        inserted_count: inserted_count ?? 0,
+        review_count: review_count ?? 0,
+        review_warnings: Array.isArray(review_warnings) ? review_warnings : [],
+        errors: Array.isArray(errors) ? errors : [],
+      });
+      toast.success("Upload processed");
     } catch (error: unknown) {
       toast.error("CSV import failed", getErrorMessage(error, "Could not ingest this CSV file."));
     } finally {
       setIsUploading(false);
     }
+  }
+
+  if (uploadSummary) {
+    return (
+      <div className="space-y-4">
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-900">
+          <p className="text-sm font-semibold">
+            {uploadSummary.inserted_count} records were ingested.
+          </p>
+        </div>
+
+        {uploadSummary.review_count > 0 ? (
+          <div className="space-y-3 rounded-xl border border-amber-300 bg-amber-50 p-4 text-amber-900">
+            <p className="text-sm font-semibold">
+              {uploadSummary.review_count} vendors require review.
+            </p>
+            <ul className="max-h-64 overflow-y-auto space-y-2 text-sm">
+              {uploadSummary.review_warnings.map((warning, index) => (
+                <li key={`${warning}-${index}`} className="rounded-md bg-amber-100/70 p-2">
+                  {warning}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+
+        <div className="flex items-center justify-end">
+          <Button type="button" onClick={onUploaded}>
+            Done
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -199,6 +243,9 @@ export default function CsvUploader({ onUploaded, onCancel }: CsvUploaderProps) 
     </div>
   );
 }
+
+
+
 
 
 
