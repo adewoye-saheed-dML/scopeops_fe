@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import api from "@/lib/api";
-import DataTable, { type DataTableColumn } from "@/components/data-table";
+import { DataTable, type DataTableColumn } from "@/components/data-table";
 import { Button } from "@/components/ui";
 import { useToast } from "@/hooks/useToast";
 import MappingModal from "@/components/scopes/MappingModal";
